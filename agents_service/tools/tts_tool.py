@@ -17,16 +17,16 @@ def get_tts_client():
         _tts_client = texttospeech.TextToSpeechClient()
     return _tts_client
 
-def text_to_speech(text: str, voice_name: str = "Kore") -> str:
+def text_to_speech(text: str, voice_name: str = "Kore") -> dict:
     """
-    Convert text to speech using Gemini-TTS and return GCS URI
+    Convert text to speech using Gemini-TTS and return GCS URI with duration
     
     Args:
         text: Text to convert to speech
         voice_name: Voice to use (default: Kore - child-friendly female voice)
     
     Returns:
-        GCS URI of generated audio file
+        Dictionary with audio_uri and estimated_duration_seconds
     """
     try:
         client = get_tts_client()
@@ -66,7 +66,15 @@ def text_to_speech(text: str, voice_name: str = "Kore") -> str:
             content_type="audio/mpeg"
         )
         
-        return audio_uri
+        # Estimate duration: average speaking rate is ~150 words per minute for children's content
+        word_count = len(text.split())
+        estimated_duration = (word_count / 150) * 60  # Convert to seconds
+        
+        return {
+            "audio_uri": audio_uri,
+            "duration_seconds": estimated_duration,
+            "word_count": word_count
+        }
         
     except Exception as e:
         raise Exception(f"Failed to generate speech: {str(e)}")
