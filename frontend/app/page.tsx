@@ -26,6 +26,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string>('')
   const [characterName, setCharacterName] = useState<string>('')
+  const [customLesson, setCustomLesson] = useState<string>('')
 
   const handleCharacterDrawn = async (imageData: string, characterName: string) => {
     setIsGenerating(true)
@@ -69,6 +70,11 @@ export default function Home() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handleCustomLessonSubmit = async () => {
+    if (!customLesson.trim()) return
+    await handleLessonSelect(customLesson)
   }
 
   const handleLessonSelect = async (lessonId: string) => {
@@ -334,6 +340,39 @@ export default function Home() {
                     </p>
                   </button>
                 ))}
+                </div>
+
+                {/* Custom Lesson Input */}
+                <div className="mt-12 max-w-3xl mx-auto">
+                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-4 border-yellow-400 rounded-3xl p-8 shadow-lg">
+                    <h3 className="text-4xl font-bold text-orange-600 mb-4 text-center">
+                      Or Create Your Own Lesson! ✨
+                    </h3>
+                    <p className="text-xl text-gray-700 mb-6 text-center">
+                      Type a custom lesson for your child
+                    </p>
+                    <div className="flex gap-4">
+                      <textarea
+                        value={customLesson}
+                        onChange={(e) => setCustomLesson(e.target.value)}
+                        placeholder="e.g., Learning to be brave when trying new things"
+                        className="flex-1 px-6 py-4 border-4 border-orange-300 rounded-2xl text-xl font-medium focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-200 resize-none"
+                        rows={3}
+                        maxLength={200}
+                      />
+                      <button
+                        onClick={handleCustomLessonSubmit}
+                        disabled={!customLesson.trim()}
+                        className={`px-10 py-4 rounded-2xl text-3xl font-bold transition-all shadow-lg ${
+                          customLesson.trim()
+                            ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white hover:from-orange-600 hover:to-yellow-600 hover:scale-105'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        Go!
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </>
             )}

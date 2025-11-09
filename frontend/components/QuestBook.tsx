@@ -345,7 +345,7 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
                 onClick={() => onQuestComplete(coinsEarned)}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-bold text-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
               >
-                Continue
+                New Story Adventure!
               </button>
             </div>
           </div>
