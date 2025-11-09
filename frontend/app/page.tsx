@@ -270,13 +270,16 @@ export default function Home() {
                       )}
                     </div>
                   ) : error ? (
-                    <div className="text-center p-8">
-                      <p className="text-red-600 font-semibold mb-4 text-2xl">❌ {error}</p>
+                    <div className="text-center p-8 max-w-md mx-auto">
+                      <div className="text-6xl mb-4">❌</div>
+                      <p className="text-orange-600 font-bold mb-6 text-3xl leading-relaxed">
+                        {error}
+                      </p>
                       <button
                         onClick={handleTryAgain}
-                        className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                        className="px-8 py-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-full text-xl font-bold hover:from-orange-600 hover:to-yellow-600 transition-all shadow-lg"
                       >
-                        Try Again
+                        Try Again ✨
                       </button>
                     </div>
                   ) : (

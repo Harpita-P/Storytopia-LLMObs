@@ -70,7 +70,7 @@ def analyze_and_generate_character(image_uri: str) -> str:
         print(f"[Visionizer Tool] Traceback: {error_details}")
         return json.dumps({
             "success": False,
-            "error": f"{type(e).__name__}: {str(e)}",
+            "error": str(e),  # Just the error message, no exception type prefix
             "traceback": error_details
         })
 

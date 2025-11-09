@@ -261,9 +261,11 @@ async def generate_character(
             }
         
         if not result.get("success"):
+            # User-friendly error message
+            user_message = "Oops, that didn't work. Try again and make sure your drawing is appropriate!"
             raise HTTPException(
                 status_code=400,
-                detail=result.get("error", "Failed to process drawing")
+                detail=user_message
             )
         
         # Return the result - handle both cases where fields might be in result or need extraction
@@ -281,7 +283,9 @@ async def generate_character(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        # User-friendly error message for unexpected errors
+        user_message = "Oops, that didn't work. Try again and make sure your drawing is appropriate!"
+        raise HTTPException(status_code=500, detail=user_message)
 
 
 @app.post("/create-quest")
@@ -372,7 +376,7 @@ Generate 8 scenes teaching this lesson through {character_name}'s adventure.
             print(f"[API] Failed to parse quest JSON: {e}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to parse quest data: {str(e)}"
+                detail="Oops, please try again!"
             )
         
         # Step 2: Generate illustrations with Illustrator Agent
@@ -526,7 +530,7 @@ CRITICAL CONSISTENCY REQUIREMENTS:
     except Exception as e:
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error creating quest: {str(e)}")
+        raise HTTPException(status_code=500, detail="Oops, please try again!")
 
 if __name__ == "__main__":
     import uvicorn

@@ -69,6 +69,9 @@ def generate_character_image(prompt: str, negative_prompt: Optional[str] = None)
                     raise
         
         # Get the first generated image
+        if not images or len(images) == 0:
+            raise Exception("Oops, try drawing a different type of character!")
+        
         generated_image = images[0]
         
         # Convert to bytes
@@ -84,7 +87,12 @@ def generate_character_image(prompt: str, negative_prompt: Optional[str] = None)
         return image_uri
         
     except Exception as e:
-        raise Exception(f"Failed to generate character image: {str(e)}")
+        error_msg = str(e)
+        # If it's already our user-friendly message, pass it through
+        if "Oops, try drawing a different type of character!" in error_msg:
+            raise
+        # Otherwise, convert to user-friendly message
+        raise Exception("Oops, try drawing a different type of character!")
 
 
 def generate_scene_image(prompt: str, character_description: Optional[str] = None, enforce_consistency: bool = False) -> str:
