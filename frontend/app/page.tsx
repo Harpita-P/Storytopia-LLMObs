@@ -147,10 +147,10 @@ export default function Home() {
 
         {/* Progress Steps - Colorful Bubble Tabs */}
         <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-full shadow-2xl px-8 py-3 flex gap-3 items-center">
+          <div className="bg-white rounded-full shadow-2xl px-10 py-5 flex gap-4 items-center">
             <button
               onClick={() => setActiveStep('character')}
-              className={`px-8 py-3 rounded-full font-bold text-lg transition-all transform hover:scale-105 ${
+              className={`px-10 py-5 rounded-full font-bold text-2xl transition-all transform hover:scale-105 ${
                 activeStep === 'character'
                   ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white shadow-lg scale-110'
                   : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
@@ -161,7 +161,7 @@ export default function Home() {
             <button
               onClick={() => setActiveStep('lesson')}
               disabled={!generatedCharacter}
-              className={`px-8 py-3 rounded-full font-bold text-lg transition-all transform hover:scale-105 ${
+              className={`px-10 py-5 rounded-full font-bold text-2xl transition-all transform hover:scale-105 ${
                 activeStep === 'lesson'
                   ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg scale-110'
                   : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
@@ -171,26 +171,29 @@ export default function Home() {
             </button>
             <button
               disabled={!questData}
-              className={`px-8 py-3 rounded-full font-bold text-lg transition-all transform hover:scale-105 ${
+              className={`px-10 py-5 rounded-full font-bold text-2xl transition-all transform hover:scale-105 ${
                 activeStep === 'quest'
                   ? 'bg-black text-white shadow-lg scale-110'
                   : 'bg-white text-black border-2 border-black hover:bg-gray-50'
               } disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100`}
             >
-              Story Adventure!
+              My Story Adventure!
             </button>
           </div>
         </div>
 
         {/* Step 1: Character Creation */}
         {activeStep === 'character' && (
-          <div className="bg-white rounded-3xl shadow-2xl p-6" style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.5), 0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white rounded-3xl shadow-2xl p-6 animate-pulse-grow" style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.5), 0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             <div className="grid grid-cols-2 gap-8 h-[calc(100vh-240px)]">
               {/* Left: Drawing Canvas */}
               <div className="flex flex-col">
-                <h2 className="text-4xl font-bold text-black text-center mb-4 mt-6">
-                  Draw Your Favorite Character!
-                </h2>
+                <div className="flex items-center justify-start mb-4 mt-6 gap-4 pl-8">
+                  <img src="/sparkle.png" alt="Sparkle" className="w-32 h-32" />
+                  <h2 className="text-4xl font-bold text-black">
+                    Draw Your Favorite Character!
+                  </h2>
+                </div>
                 <div className="flex-1">
                   <DrawingCanvas
                     title=""
@@ -311,7 +314,7 @@ export default function Home() {
 
         {/* Step 2: Lesson Selection */}
         {activeStep === 'lesson' && (
-          <div className="bg-white rounded-3xl shadow-2xl p-8" style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.5), 0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+          <div className="bg-white rounded-3xl shadow-2xl p-8 animate-pulse-grow" style={{ boxShadow: '0 0 40px rgba(251, 191, 36, 0.5), 0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
             {isGenerating ? (
               <div className="text-center py-16">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mx-auto mb-4"></div>
@@ -348,7 +351,7 @@ export default function Home() {
                     <h3 className="text-4xl font-bold text-orange-600 mb-4 text-center">
                       Or Create Your Own Lesson! ✨
                     </h3>
-                    <p className="text-xl text-gray-700 mb-6 text-center">
+                    <p className="text-3xl text-gray-700 mb-6 text-center">
                       Type a custom lesson for your child
                     </p>
                     <div className="flex gap-4">
@@ -356,7 +359,7 @@ export default function Home() {
                         value={customLesson}
                         onChange={(e) => setCustomLesson(e.target.value)}
                         placeholder="e.g., Learning to be brave when trying new things"
-                        className="flex-1 px-6 py-4 border-4 border-orange-300 rounded-2xl text-xl font-medium focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-200 resize-none"
+                        className="flex-1 px-6 py-4 border-4 border-orange-300 rounded-2xl text-2xl font-medium focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-200 resize-none"
                         rows={3}
                         maxLength={200}
                       />

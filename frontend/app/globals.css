@@ -85,3 +85,46 @@ body {
 .animate-float-subtle {
   animation: float-subtle 2s ease-in-out infinite;
 }
+
+@keyframes pulse-grow {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.005);
+  }
+}
+
+.animate-pulse-grow {
+  animation: pulse-grow 2s ease-in-out infinite;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti-piece {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  z-index: 9999;
+  animation: confetti-fall 5s linear forwards;
+}
+
+.try-again-text {
+  position: fixed;
+  font-size: 64px;
+  font-weight: bold;
+  color: #FF6B6B;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  animation: confetti-fall 4s ease-in forwards;
+  pointer-events: none;
+}

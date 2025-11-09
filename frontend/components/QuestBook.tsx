@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Coins } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface QuestScene {
   scene_number: number
@@ -35,6 +35,7 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
   const [sceneCompleted, setSceneCompleted] = useState<boolean[]>(new Array(8).fill(false))
   const [countdown, setCountdown] = useState<number>(0)
   const [isFlipping, setIsFlipping] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   const currentScene = scenes[currentPage]
   const isFirstPage = currentPage === 0
@@ -52,6 +53,52 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
     }
   }, [currentPage, scenes])
 
+  const createConfetti = () => {
+    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739']
+    const confettiCount = 100
+    
+    for (let i = 0; i < confettiCount; i++) {
+      const confetti = document.createElement('div')
+      confetti.className = 'confetti-piece'
+      confetti.style.left = Math.random() * 100 + '%'
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
+      confetti.style.animationDelay = Math.random() * 0.5 + 's'
+      confetti.style.animationDuration = (Math.random() * 3 + 4) + 's'
+      
+      // Random shapes
+      if (Math.random() > 0.5) {
+        confetti.style.borderRadius = '50%'
+      }
+      
+      document.body.appendChild(confetti)
+      
+      // Remove after animation
+      setTimeout(() => {
+        confetti.remove()
+      }, 5000)
+    }
+  }
+
+  const createTryAgainText = () => {
+    const textCount = 8
+    
+    for (let i = 0; i < textCount; i++) {
+      const textElement = document.createElement('div')
+      textElement.className = 'try-again-text'
+      textElement.textContent = '🙁'
+      textElement.style.left = Math.random() * 100 + '%'
+      textElement.style.animationDelay = (Math.random() * 0.3) + 's'
+      textElement.style.animationDuration = (Math.random() * 1 + 3.5) + 's'
+      
+      document.body.appendChild(textElement)
+      
+      // Remove after animation
+      setTimeout(() => {
+        textElement.remove()
+      }, 5000)
+    }
+  }
+
   const handleOptionClick = (option: 'a' | 'b') => {
     if (sceneCompleted[currentPage]) return // Already completed this scene
     
@@ -61,6 +108,11 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
     const selectedChoice = option === 'a' ? currentScene.option_a : currentScene.option_b
 
     if (selectedChoice.is_correct) {
+      // Trigger confetti!
+      createConfetti()
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 5000)
+      
       // Correct answer - earn coin and mark scene as completed
       setCoinsEarned(prev => prev + 1)
       const newCompleted = [...sceneCompleted]
@@ -91,6 +143,9 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
           onQuestComplete(coinsEarned + 1)
         }
       }, 8000)
+    } else {
+      // Incorrect answer - trigger Try Again text animation
+      createTryAgainText()
     }
   }
 
@@ -132,13 +187,13 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
         
         {/* Coin Counter */}
         <div className="absolute -top-16 right-0 bg-yellow-400 text-yellow-900 px-6 py-3 rounded-full shadow-lg flex items-center gap-2 font-bold text-xl z-10">
-          <Coins className="w-6 h-6" />
+          <span className="text-2xl">⭐️</span>
           <span>{coinsEarned} / 8</span>
         </div>
 
         {/* Book Page */}
         <div className={`bg-white rounded-3xl shadow-2xl border-8 border-amber-200 overflow-hidden transition-all duration-600 ${
-          isFlipping ? 'animate-page-flip' : ''
+          isFlipping ? 'animate-page-flip' : 'animate-pulse-grow'
         }`}
         style={{
           transformStyle: 'preserve-3d',
@@ -209,7 +264,7 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
               {/* Completion Badge */}
               {sceneCompleted[currentPage] && (
                 <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                  <Coins className="w-5 h-5" />
+                  <span className="text-xl">⭐️</span>
                   <span className="font-bold">+1</span>
                 </div>
               )}
@@ -333,13 +388,13 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
         {allScenesCompleted && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-3xl">
             <div className="bg-white rounded-3xl p-12 text-center shadow-2xl max-w-md">
-              <div className="text-8xl mb-4">🐻</div>
+              <img src="/star.png" alt="Star" className="w-32 h-32 mb-4 mx-auto" />
               <h2 className="text-4xl font-bold text-purple-700 mb-6">
                 Quest Complete!
               </h2>
               <div className="bg-amber-100 rounded-full px-8 py-4 inline-flex items-center gap-3 mb-6">
-                <span className="text-5xl">🍯</span>
-                <span className="text-3xl font-bold text-amber-700">{coinsEarned} Honey Jars Earned!</span>
+                <span className="text-5xl">⭐️</span>
+                <span className="text-3xl font-bold text-amber-700">{coinsEarned} Stars Earned!</span>
               </div>
               <button
                 onClick={() => onQuestComplete(coinsEarned)}

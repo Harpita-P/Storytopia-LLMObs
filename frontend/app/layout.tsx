@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Storytopia - AI Story Creator',
+  title: 'Storytopia',
   description: 'Turn your drawings into magical animated stories',
 }
 

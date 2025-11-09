@@ -211,12 +211,18 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
         <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-300">
           <canvas
             ref={canvasRef}
+            width={900}
+            height={600}
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            className="cursor-crosshair block"
-            style={{ touchAction: 'none', width: '900px', height: '600px' }}
+            className="block cursor-crosshair"
+            style={{ 
+              touchAction: 'none', 
+              width: '900px', 
+              height: '600px'
+            }}
           />
         </div>
       </div>
@@ -224,22 +230,27 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
       {/* Color Palette */}
       <div className="bg-white p-4 rounded-lg shadow">
         <p className="text-xl font-semibold mb-3">Colors:</p>
-        <div className="grid grid-cols-10 gap-3">
-          {COLORS.map((color) => (
+        <div className="grid grid-cols-10 gap-1">
+          {COLORS.map((color, index) => (
             <button
               key={color}
               onClick={() => {
                 setCurrentColor(color)
                 setIsEraser(false)
               }}
-              className={`w-12 h-12 rounded-full border-3 transition-all ${
+              className={`w-24 h-24 transition-all ${
                 currentColor === color
-                  ? 'border-purple-500 scale-110'
-                  : 'border-gray-300 hover:scale-105'
+                  ? 'scale-110 ring-4 ring-purple-500'
+                  : 'hover:scale-105'
               }`}
-              style={{ backgroundColor: color }}
               title={color}
-            />
+            >
+              <img 
+                src={`/pencils/${index + 1}.png`} 
+                alt={`Pencil ${index + 1}`}
+                className="w-full h-full object-contain"
+              />
+            </button>
           ))}
         </div>
       </div>
@@ -247,7 +258,7 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
       {/* Brush Size Slider */}
       <div className="bg-white p-4 rounded-lg shadow">
         <label className="block text-xl font-semibold mb-3">
-          Brush Size: {brushSize}px
+          Size: {brushSize}px
         </label>
         <input
           type="range"
