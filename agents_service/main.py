@@ -546,16 +546,18 @@ async def generate_speech(request: TextToSpeechRequest):
         
         print(f"[TTS] Converting text to speech: {request.text[:50]}...")
         
-        audio_uri = text_to_speech(
+        audio_data = text_to_speech(
             text=request.text,
             voice_name=request.voice_name
         )
         
-        print(f"[TTS] Audio generated: {audio_uri}")
+        print(f"[TTS] Audio generated: {audio_data['audio_uri']}, duration: {audio_data['duration_seconds']:.2f}s")
         
         return {
             "status": "success",
-            "audio_uri": audio_uri,
+            "audio_uri": audio_data["audio_uri"],
+            "duration_seconds": audio_data["duration_seconds"],
+            "word_count": audio_data["word_count"],
             "text": request.text
         }
         

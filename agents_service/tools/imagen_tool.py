@@ -69,10 +69,11 @@ def generate_character_image(prompt: str, negative_prompt: Optional[str] = None)
                     raise
         
         # Get the first generated image
-        if not images or len(images) == 0:
+        # images is an ImageGenerationResponse object with .images attribute
+        if not images or not hasattr(images, 'images') or len(images.images) == 0:
             raise Exception("Oops, try drawing a different type of character!")
         
-        generated_image = images[0]
+        generated_image = images.images[0]
         
         # Convert to bytes
         image_bytes = generated_image._image_bytes
@@ -148,7 +149,7 @@ CRITICAL CHARACTER CONSISTENCY REQUIREMENTS:
                 
                 # Check if images were actually generated
                 # Note: images is an ImageGenerationResponse object, not a list
-                if not images:
+                if not images or not hasattr(images, 'images') or len(images.images) == 0:
                     raise Exception("Imagen returned no images. This may be due to safety filters blocking the content.")
                 
                 break  # Success
@@ -166,7 +167,7 @@ CRITICAL CHARACTER CONSISTENCY REQUIREMENTS:
                 else:
                     raise
         
-        generated_image = images[0]
+        generated_image = images.images[0]
         image_bytes = generated_image._image_bytes
         
         # Upload to GCS
