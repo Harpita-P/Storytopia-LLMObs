@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Volume2 } from 'lucide-react'
 
 interface QuestScene {
   scene_number: number
@@ -36,6 +36,8 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
   const [countdown, setCountdown] = useState<number>(0)
   const [isFlipping, setIsFlipping] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
 
   const currentScene = scenes[currentPage]
   const isFirstPage = currentPage === 0
@@ -180,6 +182,48 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
     return selectedOption === 'a' ? currentScene.option_a.is_correct : currentScene.option_b.is_correct
   }
 
+  const playAudio = async (text: string, audioId: string) => {
+    try {
+      setPlayingAudio(audioId)
+      
+      // Check if audio is already cached
+      if (audioCache.has(text)) {
+        const audioUrl = audioCache.get(text)!
+        const audio = new Audio(audioUrl)
+        audio.onended = () => setPlayingAudio(null)
+        await audio.play()
+        return
+      }
+      
+      // Generate new audio
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+      const response = await fetch(`${apiUrl}/text-to-speech`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice_name: 'Kore' })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate audio')
+      }
+      
+      const data = await response.json()
+      const audioUrl = data.audio_uri
+      
+      // Cache the audio URL
+      setAudioCache(prev => new Map(prev.set(text, audioUrl)))
+      
+      // Play the audio
+      const audio = new Audio(audioUrl)
+      audio.onended = () => setPlayingAudio(null)
+      await audio.play()
+      
+    } catch (error) {
+      console.error('Error playing audio:', error)
+      setPlayingAudio(null)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-start justify-center pt-8 p-4">
       {/* Picture Book Container */}
@@ -271,9 +315,19 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
 
               {/* Story Text Overlay - Like a real storybook */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-24 pb-6 px-12">
-                <p className="text-white text-5xl leading-relaxed font-bold drop-shadow-lg text-center">
-                  {currentScene.scenario}
-                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <p className="text-white text-5xl leading-relaxed font-bold drop-shadow-lg text-center flex-1">
+                    {currentScene.scenario}
+                  </p>
+                  <button
+                    onClick={() => playAudio(currentScene.scenario, `scenario-${currentScene.scene_number}`)}
+                    disabled={playingAudio === `scenario-${currentScene.scene_number}`}
+                    className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 disabled:opacity-50"
+                    title="Read story aloud"
+                  >
+                    <Volume2 className={`w-8 h-8 ${playingAudio === `scenario-${currentScene.scene_number}` ? 'animate-pulse' : ''}`} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -282,9 +336,19 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
 
               {/* Question */}
               <div className="text-center">
-                <h3 className="text-4xl font-bold text-black mb-8">
-                  {currentScene.question}
-                </h3>
+                <div className="flex items-center justify-center gap-4 mb-8">
+                  <h3 className="text-4xl font-bold text-black flex-1">
+                    {currentScene.question}
+                  </h3>
+                  <button
+                    onClick={() => playAudio(currentScene.question, `question-${currentScene.scene_number}`)}
+                    disabled={playingAudio === `question-${currentScene.scene_number}`}
+                    className="bg-purple-100 hover:bg-purple-200 text-purple-600 p-3 rounded-full transition-all duration-300 hover:scale-110 disabled:opacity-50"
+                    title="Read question aloud"
+                  >
+                    <Volume2 className={`w-6 h-6 ${playingAudio === `question-${currentScene.scene_number}` ? 'animate-pulse' : ''}`} />
+                  </button>
+                </div>
               </div>
 
               {/* Options */}
@@ -304,7 +368,18 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
                   >
                     <div className="flex items-start gap-4">
                       <span className="text-4xl font-bold text-orange-600">A</span>
-                      <span className="text-gray-800 text-left text-3xl">{currentScene.option_a.text}</span>
+                      <span className="text-gray-800 text-left text-3xl flex-1">{currentScene.option_a.text}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          playAudio(currentScene.option_a.text, `option-a-${currentScene.scene_number}`)
+                        }}
+                        disabled={playingAudio === `option-a-${currentScene.scene_number}`}
+                        className="bg-orange-200 hover:bg-orange-300 text-orange-600 p-2 rounded-full transition-all duration-300 hover:scale-110 disabled:opacity-50 ml-2"
+                        title="Read option A aloud"
+                      >
+                        <Volume2 className={`w-5 h-5 ${playingAudio === `option-a-${currentScene.scene_number}` ? 'animate-pulse' : ''}`} />
+                      </button>
                     </div>
                   </button>
 
@@ -322,7 +397,18 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
                   >
                     <div className="flex items-start gap-4">
                       <span className="text-4xl font-bold text-yellow-600">B</span>
-                      <span className="text-gray-800 text-left text-3xl">{currentScene.option_b.text}</span>
+                      <span className="text-gray-800 text-left text-3xl flex-1">{currentScene.option_b.text}</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          playAudio(currentScene.option_b.text, `option-b-${currentScene.scene_number}`)
+                        }}
+                        disabled={playingAudio === `option-b-${currentScene.scene_number}`}
+                        className="bg-yellow-200 hover:bg-yellow-300 text-yellow-600 p-2 rounded-full transition-all duration-300 hover:scale-110 disabled:opacity-50 ml-2"
+                        title="Read option B aloud"
+                      >
+                        <Volume2 className={`w-5 h-5 ${playingAudio === `option-b-${currentScene.scene_number}` ? 'animate-pulse' : ''}`} />
+                      </button>
                     </div>
                   </button>
                 </div>

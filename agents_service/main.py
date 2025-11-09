@@ -44,6 +44,10 @@ class CreateQuestRequest(BaseModel):
     character_name: str
     lesson: str
 
+class TextToSpeechRequest(BaseModel):
+    text: str
+    voice_name: str = "Kore"
+
 
 def extract_json_block(text: str) -> dict:
     """
@@ -527,6 +531,34 @@ CRITICAL CONSISTENCY REQUIREMENTS:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error creating quest: {str(e)}")
+
+@app.post("/text-to-speech")
+async def generate_speech(request: TextToSpeechRequest):
+    """
+    Convert text to speech using Google Cloud TTS
+    """
+    try:
+        from tools.tts_tool import text_to_speech
+        
+        print(f"[TTS] Converting text to speech: {request.text[:50]}...")
+        
+        audio_uri = text_to_speech(
+            text=request.text,
+            voice_name=request.voice_name
+        )
+        
+        print(f"[TTS] Audio generated: {audio_uri}")
+        
+        return {
+            "status": "success",
+            "audio_uri": audio_uri,
+            "text": request.text
+        }
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
