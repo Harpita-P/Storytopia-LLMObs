@@ -53,6 +53,12 @@ def generate_character_image(prompt: str, negative_prompt: Optional[str] = None)
                     safety_filter_level="block_some",
                     person_generation="allow_adult"
                 )
+                
+                # Check if images were actually generated
+                # Note: images is an ImageGenerationResponse object, not a list
+                if not images:
+                    raise Exception("Imagen returned no images. This may be due to safety filters blocking the content.")
+                
                 break  # Success
             except Exception as api_error:
                 error_str = str(api_error)

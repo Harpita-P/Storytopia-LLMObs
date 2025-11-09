@@ -2,6 +2,15 @@
 
 AI-powered multi-agent system that converts children's drawings into personalized animated stories with embedded life lessons.
 
+## 🔒 Security Notice
+
+**IMPORTANT:** This repository does NOT contain any API keys or credentials. You must set up your own:
+- Google Cloud Project with Vertex AI enabled
+- Google Cloud Storage bucket
+- Environment variables (see setup instructions below)
+
+Never commit `.env` files or credentials to version control!
+
 ## 🏗️ Architecture
 
 - **Frontend**: Next.js app with Canvas API (Cloud Run Service #1)

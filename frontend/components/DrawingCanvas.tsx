@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Undo, Eraser, Trash2 } from 'lucide-react'
+import { Undo, Eraser, Trash2, Upload } from 'lucide-react'
 
 interface DrawingCanvasProps {
   onImageGenerated?: (imageData: string) => void
@@ -17,6 +17,7 @@ const COLORS = [
 
 export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentColor, setCurrentColor] = useState('#000000')
   const [brushSize, setBrushSize] = useState(5)
@@ -127,6 +128,52 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
     saveToHistory()
   }
 
+  const handleUploadImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Check if it's an image
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+
+        // Clear canvas first
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        // Calculate scaling to fit image in canvas while maintaining aspect ratio
+        const scale = Math.min(
+          canvas.width / img.width,
+          canvas.height / img.height
+        )
+        const x = (canvas.width - img.width * scale) / 2
+        const y = (canvas.height - img.height * scale) / 2
+
+        // Draw image centered and scaled
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale)
+        saveToHistory()
+      }
+      img.src = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   const getCanvasData = () => {
     const canvas = canvasRef.current
     if (!canvas) return ''
@@ -162,22 +209,47 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
       <div className="bg-white p-4 rounded-lg shadow">
         <p className="text-sm font-semibold mb-2">Colors:</p>
         <div className="grid grid-cols-10 gap-2">
-          {COLORS.map((color) => (
-            <button
-              key={color}
-              onClick={() => {
-                setCurrentColor(color)
-                setIsEraser(false)
-              }}
-              className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                currentColor === color && !isEraser
-                  ? 'border-blue-500 scale-110'
-                  : 'border-gray-300'
-              }`}
-              style={{ backgroundColor: color }}
-              title={color}
-            />
-          ))}
+          {COLORS.map((color) => {
+            // Test: Show crayon for pink color
+            if (color === '#FFC0CB') {
+              return (
+                <button
+                  key={color}
+                  onClick={() => {
+                    setCurrentColor(color)
+                    setIsEraser(false)
+                  }}
+                  className={`w-12 h-12 transition-transform hover:scale-110 ${
+                    currentColor === color && !isEraser ? 'scale-110' : ''
+                  }`}
+                  title="Pink"
+                >
+                  <img 
+                    src="/crayons/pink.png" 
+                    alt="Pink crayon"
+                    className="w-full h-full object-contain"
+                  />
+                </button>
+              )
+            }
+            
+            return (
+              <button
+                key={color}
+                onClick={() => {
+                  setCurrentColor(color)
+                  setIsEraser(false)
+                }}
+                className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                  currentColor === color && !isEraser
+                    ? 'border-blue-500 scale-110'
+                    : 'border-gray-300'
+                }`}
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            )
+          })}
         </div>
       </div>
 
@@ -195,7 +267,7 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
       </div>
 
       {/* Tools */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setIsEraser(!isEraser)}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
@@ -224,6 +296,23 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
           <Trash2 size={20} />
           Clear
         </button>
+
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+        >
+          <Upload size={20} />
+          Upload Image
+        </button>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleUploadImage}
+          className="hidden"
+        />
       </div>
 
       {/* Generate Button */}
