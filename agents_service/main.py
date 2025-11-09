@@ -317,10 +317,13 @@ async def create_quest(request: CreateQuestRequest):
         quest_input = f"""
 Create an interactive quest with these details:
 
+CHARACTER NAME: {character_name}
 CHARACTER DESCRIPTION: {character_description}
 LESSON: {lesson}
 
-Generate 8 scenes teaching this lesson through the character's adventure.
+CRITICAL: Use the character name "{character_name}" in ALL 8 scenes. 
+The character's name is "{character_name}" - use this exact name throughout the entire quest.
+Generate 8 scenes teaching this lesson through {character_name}'s adventure.
 """
         
         # Create session for quest creation
@@ -381,10 +384,15 @@ Generate illustrations for this quest:
 QUEST DATA (JSON):
 {json.dumps(quest_data)}
 
-CHARACTER DESCRIPTION:
+CHARACTER DESCRIPTION (USE THIS EXACTLY):
 {character_description}
 
-Create 8 storybook-style illustrations maintaining character consistency.
+CRITICAL CONSISTENCY REQUIREMENTS:
+- The character MUST look EXACTLY the same in all 8 scenes
+- Use the character description PRECISELY - do not deviate
+- Maintain IDENTICAL: colors, proportions, features, style, markings
+- The character should be instantly recognizable across all scenes
+- Do NOT change, morph, or alter the character's appearance in any way
 """
         
         # Create separate session for illustrator

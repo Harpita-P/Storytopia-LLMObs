@@ -23,11 +23,11 @@ from tools.imagen_tool import generate_scene_image
 def generate_all_scene_illustrations(quest_json: str, character_description: str) -> str:
     """
     Tool function: Generates all 8 scene illustrations for the quest
-    Generates first 4 scenes immediately, then waits 2 minutes before generating remaining 4
+    Generates first 4 scenes immediately, then waits 3 minutes before generating remaining 4
     
     Args:
         quest_json: JSON string of the quest data with 8 scenes
-        character_description: Full character description for consistency
+        character_description: DETAILED character description for strict visual consistency
     
     Returns:
         JSON string with image URIs for all 8 scenes
@@ -36,6 +36,7 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
         import time
         
         print(f"[Illustrator Tool] Starting illustration generation...")
+        print(f"[Illustrator Tool] Character description: {character_description[:100]}...")
         
         # Parse quest data
         quest_data = json.loads(quest_json)
@@ -61,10 +62,11 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
             enhanced_prompt = f"{image_prompt}\n\nCharacter consistency note: {character_description}"
             
             try:
-                # Generate the image
+                # Generate the image with strict character consistency
                 image_uri = generate_scene_image(
                     prompt=enhanced_prompt,
-                    character_description=character_description
+                    character_description=character_description,
+                    enforce_consistency=True
                 )
                 
                 image_uris.append({
@@ -74,6 +76,13 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
                 })
                 
                 print(f"[Illustrator Tool] ✅ Scene {i} complete: {image_uri}")
+                
+                # Add delay between images to respect rate limits (30 RPM quota)
+                if i < 4:  # Don't wait after last image of batch
+                    delay = 5
+                    print(f"[Illustrator Tool] ⏳ Waiting {delay} seconds before next image (rate limit management)...")
+                    time.sleep(delay)
+                    
             except Exception as e:
                 print(f"[Illustrator Tool] ⚠️ Scene {i} failed: {str(e)}")
                 # Add placeholder for failed scene
@@ -86,8 +95,8 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
         
         print(f"[Illustrator Tool] ✅ First 4 scenes complete! User can start reading now.")
         
-        # WAIT 2 minutes before generating remaining scenes (rate limit management)
-        wait_time = 120  # 2 minutes
+        # WAIT 20 seconds before generating remaining scenes (30 RPM quota allows faster generation)
+        wait_time = 20  # 20 seconds
         print(f"[Illustrator Tool] ⏳ Waiting {wait_time} seconds before generating scenes 5-8...")
         print(f"[Illustrator Tool] 💡 User can interact with first 4 scenes during this time!")
         time.sleep(wait_time)
@@ -104,10 +113,11 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
             enhanced_prompt = f"{image_prompt}\n\nCharacter consistency note: {character_description}"
             
             try:
-                # Generate the image
+                # Generate the image with strict character consistency
                 image_uri = generate_scene_image(
                     prompt=enhanced_prompt,
-                    character_description=character_description
+                    character_description=character_description,
+                    enforce_consistency=True
                 )
                 
                 image_uris.append({
@@ -117,6 +127,13 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
                 })
                 
                 print(f"[Illustrator Tool] ✅ Scene {i} complete: {image_uri}")
+                
+                # Add delay between images to respect rate limits (30 RPM quota)
+                if i < 8:  # Don't wait after last image
+                    delay = 5
+                    print(f"[Illustrator Tool] ⏳ Waiting {delay} seconds before next image (rate limit management)...")
+                    time.sleep(delay)
+                    
             except Exception as e:
                 print(f"[Illustrator Tool] ⚠️ Scene {i} failed: {str(e)}")
                 # Add placeholder for failed scene
