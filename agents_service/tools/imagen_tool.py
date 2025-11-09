@@ -87,10 +87,17 @@ def generate_character_image(prompt: str, negative_prompt: Optional[str] = None)
         raise Exception(f"Failed to generate character image: {str(e)}")
 
 
-def generate_scene_image(prompt: str, character_description: Optional[str] = None) -> str:
+def generate_scene_image(prompt: str, character_description: Optional[str] = None, enforce_consistency: bool = False) -> str:
     """
     Generates a scene/setting image using Imagen 3.0
-    Returns GCS URI of generated image
+    
+    Args:
+        prompt: Scene description
+        character_description: DETAILED character description for visual consistency
+        enforce_consistency: If True, adds strict consistency requirements to prompt
+    
+    Returns:
+        GCS URI of generated image
     """
     try:
         # Ensure Vertex AI is initialized
@@ -104,6 +111,19 @@ def generate_scene_image(prompt: str, character_description: Optional[str] = Non
         else:
             full_prompt = prompt
         
+        # Add strong character consistency instruction if enforcing
+        if enforce_consistency and character_description:
+            full_prompt = f"""{full_prompt}
+
+CRITICAL CHARACTER CONSISTENCY REQUIREMENTS:
+- The character MUST maintain EXACT visual consistency with the description
+- Keep the SAME colors, proportions, features, and style as described
+- The character should be instantly recognizable as the same character
+- Do NOT change, morph, or alter the character's appearance
+- Maintain consistent: body shape, facial features, color palette, clothing/markings
+- Follow the character description PRECISELY without deviation
+"""
+        
         # Generate image with retry logic for rate limits
         max_retries = 3
         retry_delay = 2
@@ -113,7 +133,7 @@ def generate_scene_image(prompt: str, character_description: Optional[str] = Non
                 images = model.generate_images(
                     prompt=full_prompt,
                     number_of_images=1,
-                    negative_prompt="violence, weapons, fighting, blood, gore, death, killing, scary monsters, horror, adult content",
+                    negative_prompt="violence, weapons, fighting, blood, gore, death, killing, scary monsters, horror, adult content, character inconsistency, different character, morphing",
                     aspect_ratio="16:9",
                     safety_filter_level="block_some"
                 )
