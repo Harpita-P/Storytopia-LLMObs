@@ -1,0 +1,100 @@
+{
+  "lessons": [
+    {
+      "id": "sharing",
+      "title": "Sharing My Toys",
+      "description": "Learn why sharing makes everyone happy",
+      "emoji": "🤝",
+      "age_range": "4-8",
+      "key_concepts": ["taking turns", "generosity", "fairness"]
+    },
+    {
+      "id": "kindness",
+      "title": "Being Kind with Words",
+      "description": "Discover the power of kind and gentle words",
+      "emoji": "💝",
+      "age_range": "4-8",
+      "key_concepts": ["empathy", "gentle speech", "encouragement"]
+    },
+    {
+      "id": "honesty",
+      "title": "Telling the Truth",
+      "description": "Learn why being honest is important",
+      "emoji": "✨",
+      "age_range": "5-8",
+      "key_concepts": ["truthfulness", "trust", "integrity"]
+    },
+    {
+      "id": "inclusion",
+      "title": "Including Others",
+      "description": "Make sure everyone feels welcome and included",
+      "emoji": "🌈",
+      "age_range": "4-8",
+      "key_concepts": ["friendship", "welcoming", "teamwork"]
+    },
+    {
+      "id": "patience",
+      "title": "Being Patient",
+      "description": "Learn to wait calmly and be patient",
+      "emoji": "⏰",
+      "age_range": "4-8",
+      "key_concepts": ["waiting", "self-control", "calmness"]
+    },
+    {
+      "id": "helping",
+      "title": "Helping Others",
+      "description": "Discover the joy of helping people",
+      "emoji": "🤲",
+      "age_range": "4-8",
+      "key_concepts": ["helpfulness", "kindness", "service"]
+    },
+    {
+      "id": "gratitude",
+      "title": "Saying Thank You",
+      "description": "Learn to appreciate and thank others",
+      "emoji": "🙏",
+      "age_range": "4-8",
+      "key_concepts": ["thankfulness", "appreciation", "manners"]
+    },
+    {
+      "id": "listening",
+      "title": "Listening Carefully",
+      "description": "Learn to listen when others are speaking",
+      "emoji": "👂",
+      "age_range": "4-8",
+      "key_concepts": ["attention", "respect", "understanding"]
+    },
+    {
+      "id": "apologizing",
+      "title": "Saying Sorry",
+      "description": "Learn when and how to apologize",
+      "emoji": "💙",
+      "age_range": "5-8",
+      "key_concepts": ["apology", "forgiveness", "making amends"]
+    },
+    {
+      "id": "courage",
+      "title": "Being Brave",
+      "description": "Find courage to try new things",
+      "emoji": "🦁",
+      "age_range": "5-8",
+      "key_concepts": ["bravery", "confidence", "trying new things"]
+    },
+    {
+      "id": "responsibility",
+      "title": "Taking Care of Things",
+      "description": "Learn to be responsible with belongings",
+      "emoji": "🎒",
+      "age_range": "5-8",
+      "key_concepts": ["responsibility", "care", "ownership"]
+    },
+    {
+      "id": "emotions",
+      "title": "Understanding Feelings",
+      "description": "Learn to recognize and express emotions",
+      "emoji": "😊",
+      "age_range": "4-8",
+      "key_concepts": ["emotions", "expression", "self-awareness"]
+    }
+  ]
+}

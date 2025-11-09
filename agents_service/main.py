@@ -6,8 +6,9 @@ Main entry point for the ADK agents service
 import os
 import json
 import re
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -35,6 +36,13 @@ app.add_middleware(
 # Initialize ADK Session Service
 session_service = InMemorySessionService()
 APP_NAME = "storytopia"
+
+
+# Request models
+class CreateQuestRequest(BaseModel):
+    character_description: str
+    character_name: str
+    lesson: str
 
 
 def extract_json_block(text: str) -> dict:
@@ -276,40 +284,241 @@ async def generate_character(
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 
-@app.post("/storytopia")
-async def create_story(
-    character_image: UploadFile = File(...),
-    setting_image: UploadFile = File(...),
-    lesson: str = Form(...),
-    user_id: str = Form(...)
-):
+@app.post("/create-quest")
+async def create_quest(request: CreateQuestRequest):
     """
-    Main endpoint for story creation
-    Accepts drawings and generates an animated story
+    Creates an interactive quest with 8 scenes
     
-    TODO: Implement full pipeline when agents are ready
+    Args:
+        character_description: Full character description
+        character_name: Character name
+        lesson: Lesson ID (e.g., "sharing", "kindness")
+    
+    Returns:
+        Quest data with 8 scenes and illustrations
     """
     try:
-        # Placeholder response
+        from agents.quest_creator import quest_creator_agent
+        from agents.illustrator import illustrator_agent
+        
+        character_description = request.character_description
+        character_name = request.character_name
+        lesson = request.lesson
+        
+        if not character_description or not lesson:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing character_description or lesson"
+            )
+        
+        # Step 1: Create Quest with Quest-Creator Agent
+        print(f"[API] Creating quest for {character_name} with lesson: {lesson}")
+        
+        quest_input = f"""
+Create an interactive quest with these details:
+
+CHARACTER DESCRIPTION: {character_description}
+LESSON: {lesson}
+
+Generate 8 scenes teaching this lesson through the character's adventure.
+"""
+        
+        # Create session for quest creation
+        user_id = f"quest_{lesson}"
+        session_id = f"session_{user_id}"
+        
+        try:
+            session = await session_service.create_session(
+                app_name=APP_NAME,
+                user_id=user_id,
+                session_id=session_id,
+                state={}
+            )
+        except:
+            pass  # Session might already exist
+        
+        # Run Quest-Creator agent
+        runner = Runner(
+            agent=quest_creator_agent,
+            app_name=APP_NAME,
+            session_service=session_service
+        )
+        
+        user_message = types.Content(
+            role='user',
+            parts=[types.Part(text=quest_input)]
+        )
+        
+        quest_response_text = ""
+        async for event in runner.run_async(
+            user_id=user_id,
+            session_id=session_id,
+            new_message=user_message
+        ):
+            if event.content and event.content.parts:
+                for part in event.content.parts:
+                    if hasattr(part, 'text') and part.text:
+                        quest_response_text = part.text
+        
+        print(f"[API] Quest response: {quest_response_text[:200]}...")
+        
+        # Parse quest data
+        try:
+            quest_data = extract_json_block(quest_response_text)
+        except Exception as e:
+            print(f"[API] Failed to parse quest JSON: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to parse quest data: {str(e)}"
+            )
+        
+        # Step 2: Generate illustrations with Illustrator Agent
+        print(f"[API] Generating illustrations for {len(quest_data.get('scenes', []))} scenes...")
+        
+        illustrator_input = f"""
+Generate illustrations for this quest:
+
+QUEST DATA (JSON):
+{json.dumps(quest_data)}
+
+CHARACTER DESCRIPTION:
+{character_description}
+
+Create 8 storybook-style illustrations maintaining character consistency.
+"""
+        
+        # Create separate session for illustrator
+        illustrator_session_id = f"{session_id}_illustrator"
+        try:
+            await session_service.create_session(
+                app_name=APP_NAME,
+                user_id=user_id,
+                session_id=illustrator_session_id,
+                state={}
+            )
+        except:
+            pass  # Session might already exist
+        
+        # Run Illustrator agent
+        illustrator_runner = Runner(
+            agent=illustrator_agent,
+            app_name=APP_NAME,
+            session_service=session_service
+        )
+        
+        illustrator_message = types.Content(
+            role='user',
+            parts=[types.Part(text=illustrator_input)]
+        )
+        
+        illustration_response_text = ""
+        illustration_tool_results = []
+        
+        async for event in illustrator_runner.run_async(
+            user_id=user_id,
+            session_id=illustrator_session_id,
+            new_message=illustrator_message
+        ):
+            if event.content and event.content.parts:
+                for part in event.content.parts:
+                    if hasattr(part, 'function_response') and part.function_response:
+                        print(f"[API] Tool function was called! Response: {part.function_response}")
+                        illustration_tool_results.append(part.function_response)
+                    elif hasattr(part, 'function_call') and part.function_call:
+                        print(f"[API] Tool function call detected: {part.function_call}")
+                    elif hasattr(part, 'text') and part.text:
+                        illustration_response_text = part.text
+                        print(f"[API] Text response from agent: {part.text[:200]}...")
+        
+        # Parse illustration results
+        illustration_data = None
+        for tool_result in illustration_tool_results:
+            try:
+                if hasattr(tool_result, 'response'):
+                    response_data = tool_result.response
+                    print(f"[API] Tool response type: {type(response_data)}")
+                    
+                    # If response is a dict with 'result' key that's a JSON string
+                    if isinstance(response_data, dict):
+                        if 'result' in response_data:
+                            result_str = response_data['result']
+                            if isinstance(result_str, str):
+                                illustration_data = json.loads(result_str)
+                            else:
+                                illustration_data = result_str
+                        else:
+                            illustration_data = response_data
+                        break
+                    elif isinstance(response_data, str):
+                        illustration_data = json.loads(response_data)
+                        break
+            except Exception as e:
+                print(f"[API] Failed to parse tool result: {e}")
+                continue
+        
+        if not illustration_data and illustration_response_text:
+            try:
+                illustration_data = extract_json_block(illustration_response_text)
+            except Exception as e:
+                print(f"[API] Failed to parse illustration text: {e}")
+                pass
+        
+        print(f"[API] Illustration data: {illustration_data}")
+        
+        # Merge scene images into quest data
+        if illustration_data and illustration_data.get("success"):
+            scene_images_list = illustration_data.get("scene_images", [])
+            print(f"[API] Scene images type: {type(scene_images_list)}, value: {scene_images_list[:2] if len(scene_images_list) > 2 else scene_images_list}")
+            
+            # Ensure scene_images is a list
+            if isinstance(scene_images_list, list) and len(scene_images_list) > 0:
+                # Check if it's a list of dicts or a list of strings
+                if isinstance(scene_images_list[0], dict):
+                    # Format: [{"scene_number": 1, "image_uri": "..."}, ...]
+                    # Include ALL scenes, even with empty image_uri (for progressive loading)
+                    scene_images = {img["scene_number"]: img.get("image_uri", "") 
+                                   for img in scene_images_list if isinstance(img, dict) and "scene_number" in img}
+                elif isinstance(scene_images_list[0], str):
+                    # Format: ["url1", "url2", ...] - map by index
+                    scene_images = {i+1: url for i, url in enumerate(scene_images_list)}
+                    print(f"[API] Mapped {len(scene_images)} string URLs to scene numbers")
+                else:
+                    print(f"[API] Warning: Unknown scene_images format")
+                    scene_images = {}
+                
+                # Apply images to scenes (including empty strings for scenes not yet generated)
+                images_applied = 0
+                for scene in quest_data.get("scenes", []):
+                    scene_num = scene.get("scene_number")
+                    if scene_num in scene_images:
+                        scene["image_uri"] = scene_images[scene_num]
+                        if scene_images[scene_num]:  # Only count non-empty URIs
+                            images_applied += 1
+                    else:
+                        # Scene not in response yet (shouldn't happen but be safe)
+                        scene["image_uri"] = ""
+                
+                print(f"[API] Applied {images_applied} images to scenes")
+            else:
+                print(f"[API] Warning: scene_images is not a valid list, skipping image merge")
+        
+        print(f"[API] Quest creation complete!")
+        
         return {
-            "status": "pending_implementation",
-            "message": "Agent pipeline will be implemented in next steps",
-            "received": {
-                "character_image": character_image.filename,
-                "setting_image": setting_image.filename,
-                "lesson": lesson,
-                "user_id": user_id
-            }
+            "status": "success",
+            "quest_title": quest_data.get("quest_title", f"{character_name}'s Adventure"),
+            "lesson": lesson,
+            "character_name": character_name,
+            "scenes": quest_data.get("scenes", []),
+            "total_scenes": len(quest_data.get("scenes", []))
         }
         
-        # Future implementation:
-        # 1. Upload images to GCS
-        # 2. Run ADK pipeline with runner.run()
-        # 3. Handle moderation results
-        # 4. Return video URL or error
-        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error creating quest: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

@@ -30,7 +30,7 @@ root_agent = LlmAgent(
     4. Moderator V2: Safety check on script
     5. Animator: Generate animated video
     
-    For now, you coordinate character generation requests.
+    For now, you coordinate character generation requests
     """,
     sub_agents=[visionizer_agent]  # Add visionizer as sub-agent
 )

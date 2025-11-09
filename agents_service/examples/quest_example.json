@@ -1,0 +1,138 @@
+{
+  "quest_title": "Mila's Sharing Adventure",
+  "lesson": "Sharing my toys",
+  "character_name": "Mila the Star Bunny",
+  "character_description": "A cheerful pink bunny with sparkly star patterns, big curious eyes, and a friendly smile",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "scenario": "Mila the Star Bunny is playing with her sparkly blue ball in the park when her friend Zoya walks over and asks, 'Can I try playing with your ball?'",
+      "question": "What should Mila say?",
+      "option_a": {
+        "text": "Sure! Let's take turns with the ball. 🌟",
+        "is_correct": true,
+        "feedback": "Wonderful! Mila is being so kind by sharing. Sharing makes everyone happy!"
+      },
+      "option_b": {
+        "text": "No, it's mine! Go away. 😠",
+        "is_correct": false,
+        "feedback": "Hmm, that didn't feel very kind. When we share, we make friends happy. Want to try a different way?"
+      },
+      "image_prompt": "A cheerful pink bunny with sparkly star patterns holding a sparkly blue ball in a sunny park, with another friendly animal character approaching. Warm, colorful, storybook illustration style for children. Bright and inviting atmosphere."
+    },
+    {
+      "scene_number": 2,
+      "scenario": "At snack time, Mila has a delicious cookie. Her friend Leo looks hungry and doesn't have any snacks.",
+      "question": "What should Mila do?",
+      "option_a": {
+        "text": "Break the cookie in half and share it with Leo. 🍪",
+        "is_correct": true,
+        "feedback": "That's so generous! Sharing food makes it taste even better when we enjoy it together!"
+      },
+      "option_b": {
+        "text": "Hide the cookie and eat it all by herself. 😔",
+        "is_correct": false,
+        "feedback": "Oh no, that would make Leo feel sad. Sharing our snacks is a kind thing to do. Let's try again!"
+      },
+      "image_prompt": "A pink bunny with star patterns sitting at a colorful table with a cookie, next to a friendly lion cub who looks hungry. Warm indoor setting, storybook style, child-friendly colors."
+    },
+    {
+      "scene_number": 3,
+      "scenario": "Mila is building a tall tower with her blocks when her little brother asks if he can use some blocks too.",
+      "question": "How should Mila respond?",
+      "option_a": {
+        "text": "Of course! Here are some blocks. Let's build together! 🏗️",
+        "is_correct": true,
+        "feedback": "Perfect! Building together is more fun than building alone. Great job sharing!"
+      },
+      "option_b": {
+        "text": "No! I need all the blocks for my tower! 🚫",
+        "is_correct": false,
+        "feedback": "Uh oh, that's not very nice. There are plenty of blocks for both of you. Let's think of a kinder way!"
+      },
+      "image_prompt": "A pink star-patterned bunny building a colorful block tower, with a smaller bunny sibling nearby. Playroom setting with toys scattered around, warm lighting, storybook illustration."
+    },
+    {
+      "scene_number": 4,
+      "scenario": "At the playground, Mila is on the swing. Another child has been waiting patiently for a turn.",
+      "question": "What's the right thing for Mila to do?",
+      "option_a": {
+        "text": "Finish her turn and let the other child have a go. ⏰",
+        "is_correct": true,
+        "feedback": "Excellent! Taking turns is a special way of sharing. Everyone gets to have fun!"
+      },
+      "option_b": {
+        "text": "Stay on the swing all day and never let anyone else use it. ⛔",
+        "is_correct": false,
+        "feedback": "That wouldn't be fair to the other children. Taking turns means everyone gets to play. Try again!"
+      },
+      "image_prompt": "A pink bunny with stars on a playground swing, with another friendly child waiting nearby. Sunny playground with trees and flowers, cheerful storybook style."
+    },
+    {
+      "scene_number": 5,
+      "scenario": "Mila's friend Emma is drawing but ran out of crayons. Mila has a big box of colorful crayons.",
+      "question": "What should Mila do?",
+      "option_a": {
+        "text": "Share her crayons with Emma so they can both draw. 🖍️",
+        "is_correct": true,
+        "feedback": "Beautiful! Sharing art supplies makes creating together even more fun. You're so thoughtful!"
+      },
+      "option_b": {
+        "text": "Keep all the crayons to herself and tell Emma to go away. 😢",
+        "is_correct": false,
+        "feedback": "Oh dear, that would make Emma sad. When we share, we help our friends. Let's choose kindness!"
+      },
+      "image_prompt": "A pink star bunny and a friendly fox sitting at an art table with crayons and drawings. Colorful art supplies scattered around, warm indoor lighting, storybook illustration style."
+    },
+    {
+      "scene_number": 6,
+      "scenario": "During story time, Mila brought her favorite book to class. Her teacher asks if she'd like to share it with everyone.",
+      "question": "How should Mila respond?",
+      "option_a": {
+        "text": "Yes! I'd love to share my favorite story with my friends! 📚",
+        "is_correct": true,
+        "feedback": "Wonderful! Sharing stories brings joy to everyone. Your friends will love it!"
+      },
+      "option_b": {
+        "text": "No, this is my special book and nobody else can see it. 📕",
+        "is_correct": false,
+        "feedback": "Hmm, but sharing stories makes them even more special! Everyone would enjoy it. Let's try again!"
+      },
+      "image_prompt": "A pink bunny with stars holding a colorful storybook in a cozy classroom with other animal friends sitting in a circle. Warm, inviting classroom setting, storybook style."
+    },
+    {
+      "scene_number": 7,
+      "scenario": "At the beach, Mila has a bucket and shovel. Her new friend Maya doesn't have any beach toys.",
+      "question": "What's the kind thing to do?",
+      "option_a": {
+        "text": "Invite Maya to build a sandcastle together using her toys. 🏖️",
+        "is_correct": true,
+        "feedback": "Amazing! Sharing makes new friends and creates wonderful memories together. Great choice!"
+      },
+      "option_b": {
+        "text": "Tell Maya she can't play because she doesn't have her own toys. 🙁",
+        "is_correct": false,
+        "feedback": "That's not very welcoming. Sharing helps us make new friends. Let's be more inclusive!"
+      },
+      "image_prompt": "A pink star bunny at a sunny beach with a bucket and shovel, next to another friendly character. Ocean waves, sandcastles, bright sunny day, cheerful storybook illustration."
+    },
+    {
+      "scene_number": 8,
+      "scenario": "It's Mila's birthday party! She has a big plate of cupcakes. All her friends are gathered around, excited to celebrate with her.",
+      "question": "What should Mila do with the cupcakes?",
+      "option_a": {
+        "text": "Share the cupcakes with all her friends so everyone can celebrate together! 🧁",
+        "is_correct": true,
+        "feedback": "Perfect! You've learned that sharing makes celebrations even more special. Mila is a wonderful friend! 🌟"
+      },
+      "option_b": {
+        "text": "Keep all the cupcakes for herself and eat them alone. 😞",
+        "is_correct": false,
+        "feedback": "Oh no, that would make everyone sad at the party. Sharing treats makes parties fun for everyone. Let's choose kindness!"
+      },
+      "image_prompt": "A pink star bunny at a colorful birthday party with balloons, streamers, and a plate of cupcakes, surrounded by happy animal friends. Festive, joyful atmosphere, warm storybook illustration style."
+    }
+  ],
+  "completion_message": "Congratulations! Mila learned that sharing makes everyone happy and helps us make wonderful friends. You earned 8 coins! 🌟",
+  "coins_earned": 8
+}

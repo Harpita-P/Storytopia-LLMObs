@@ -56,8 +56,29 @@ def analyze_drawing(image_uri: str) -> Dict[str, Any]:
         # Create image part for Vertex AI
         image_part = Part.from_data(data=image_data, mime_type="image/png")
         
-        # Generate response
-        response = model.generate_content([prompt, image_part])
+        # Generate response with retry logic for rate limits
+        max_retries = 3
+        retry_delay = 2  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content([prompt, image_part])
+                break  # Success, exit retry loop
+            except Exception as api_error:
+                error_str = str(api_error)
+                # Check if it's a rate limit error (429)
+                if "429" in error_str or "Resource exhausted" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                    if attempt < max_retries - 1:
+                        import time
+                        wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                        print(f"[Vision Tool] Rate limit hit, waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        raise Exception(f"Rate limit exceeded after {max_retries} attempts. Please wait a few minutes and try again.")
+                else:
+                    # Not a rate limit error, raise immediately
+                    raise
         
         # Parse JSON response
         result_text = response.text.strip()
