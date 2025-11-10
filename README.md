@@ -44,6 +44,8 @@ An optional **Text-to-Speech** endpoint provides narrated playback using **Gemin
 The frontend and backend are containerized with  dedicated **Dockerfiles** and deployable as two separate **Cloud Run services**.  
 Runtime dependencies include **Google Cloud Storage**, **Vertex AI (Gemini Flash + Imagen)**, and **Cloud TTS**.
 
+![Storytopia Architecture](https://github.com/Harpita-P/Storytopia/blob/62ab0873f9d73c0556d57b9b385798c24c5e06f7/Storytopia-Architecture.png?raw=true)
+
 ## How Our Multi-Agent Workflow Works
 
 Transforming a child’s character and lesson into a fully illustrated, interactive picture book is a complex process that benefits from being divided into specialized components — which is exactly where AI agents come to play. 
