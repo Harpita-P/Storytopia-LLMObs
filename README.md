@@ -95,7 +95,7 @@ Here’s how it works:
 
 Once the story structure is ready, we move to the visual storytelling phase with the **Illustrator Agent**. Here’s the process:
 
-1. The quest JSON from the previous step is passed to the **Illustrator Agent**. We also fetch the generated character image from Cloud Storage, and pass it to the agent. This step is important for maintaining visual consistency - ensuring that the kid's character appears the same in each scene. 
+1. The quest JSON from the previous step is passed to the **Illustrator Agent**. We also fetch the generated character image from Cloud Storage, and pass it to the agent. **We found that this step was really important for maintaining visual consistency** - ensuring that the kid's character appears the same in each scene. 
 2. The agent enhances the image prompts for **visual consistency** across all scenes — matching colors, character poses, and setting details.  
 3. It then calls **Gemini Flash 2.5 Image** and performs Image&text-to-Image processing, to create eye-catching **illustrations** for each scene. 
 4. Each generated image is uploaded to **Google Cloud Storage**, and the URIs are consolidated into the final JSON response.
