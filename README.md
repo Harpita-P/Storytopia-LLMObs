@@ -75,7 +75,7 @@ When a child finishes their drawing and hits “Generate Character,” we start 
 ### 2. Turning the Character into a Quest with the Quest Creator Agent
 
 We treat this agent as the “writer” of the experience — blending educational goals with fun, appropriate storytelling.
-Once the character is ready, the child selects a theme or lesson — for example, *kindness*, *sharing*, or *bravery*.  
+Once the character is ready, the child / a parent selects a lesson theme – for example, *kindness*, *online safety*, or *learning to ride a bike*.  
 
 
 ![Lesson Theme Selection Demo](https://github.com/Harpita-P/Storytopia/blob/17fef7ab21915f9e1713d21f08aad40ab70b20e9/LessonTheme.gif?raw=true)
