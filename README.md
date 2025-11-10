@@ -25,7 +25,7 @@ Storytopia consists of two main components:
 - **Next.js Frontend (UI Service):** Built for the browser, our interface lets children draw directly on a digital canvas — whether on an iPad or a computer. They can also upload photos of their favorite toys, stuffed animals, or hand-drawn art to turn them into story characters.
 - **FastAPI Multi-Agent Backend (Agents Service):** Powered by the **Google Agent Development Kit (ADK)**, the backend orchestrates three AI agents — **Visionizer**, **Quest Creator**, and **Illustrator** — to generate characters, stories, and illustrations.  
 
-An optional **Text-to-Speech** endpoint provides narrated playback using **Gemini 2.5 Flash TTS**.
+An optional **Text-to-Speech** endpoint provides narrated playback using **Cloud TTS**.
 
 ---
 
