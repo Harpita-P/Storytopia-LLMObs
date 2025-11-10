@@ -1,10 +1,8 @@
-# Storytopia ~ Making screen time less passive – and more creative
-
-**Storytopia** transforms a child’s drawing into a narrated, illustrated 8-scene quest (story adventure), blending imagination with AI creativity. Built for the **Google Cloud Run Hackathon**, Storytopia demonstrates how **multi-agent orchestration with Google ADK**, **Vertex AI**, and **Cloud Run** can turn screen time into a hands-on creative adventure.
-
----
 ![Storytopia Main Screen](https://github.com/Harpita-P/Storytopia/blob/ce180f06d415c798aa699b3cbab49e8c1f12910e/Storytopia-Main.png?raw=true)
 
+**Storytopia** transforms a child’s drawing into a narrated, illustrated 8-scene quest (story adventure), augmenting imagination with Generative AI. Built for the **Google Cloud Run Hackathon**, Storytopia demonstrates how **multi-agent orchestration with Google ADK**, **Vertex AI**, and **Cloud Run** can turn screen time into a hands-on creative adventure.
+
+---
 ## Try Storytopia Live
 
 You can access the hosted version of **Storytopia** here:  
@@ -38,12 +36,15 @@ An optional **Text-to-Speech** endpoint provides narrated playback using **Gemin
 | **Frontend** | Next.js | Cloud Run | Drawing canvas, story flow UI |
 | **Backend** | FastAPI + ADK | Cloud Run | Orchestrates AI agents |
 | **Media** | Cloud Storage | – | Stores all uploads & generated assets |
-| **AI Services** | Vertex AI (Gemini + Imagen) & Cloud TTS| — | Drawing analysis, story generation, image synthesis, narrations |
+| **AI Services** | Vertex AI (Gemini + Imagen) & Cloud TTS| – | Drawing analysis, story generation, image synthesis, narrations |
 
 The frontend and backend are containerized with  dedicated **Dockerfiles** and deployable as two separate **Cloud Run services**.  
 Runtime dependencies include **Google Cloud Storage**, **Vertex AI (Gemini Flash + Imagen)**, and **Cloud TTS**.
 
-![Storytopia Architecture](https://github.com/Harpita-P/Storytopia/blob/62ab0873f9d73c0556d57b9b385798c24c5e06f7/Storytopia-Architecture.png?raw=true)
+<p align="center">
+  <img src="https://github.com/Harpita-P/Storytopia/blob/62ab0873f9d73c0556d57b9b385798c24c5e06f7/Storytopia-Architecture.png?raw=true" alt="Storytopia Architecture" width="850">
+</p>
+<p align="center"><strong>Figure 1.</strong> Multi-Agent Architecture on Google Cloud Run</p>
 
 ## How Our Multi-Agent Workflow Works
 
@@ -57,7 +58,6 @@ Storytopia is a conversation between multiple AI agents (Google ADK) that collab
 
 ### 1. Creating Your Character with the Visionizer Agent
 We designed this stage to make kids feel like their hand-drawn art has come to life, while maintaining visual consistency and safety through automated filtering.
-
 When a child finishes their drawing and hits “Generate Character,” we start the process with our **Visionizer Agent**.
 
 1. The frontend sends the base64-encoded drawing and a user ID to the '/generate-character` endpoint. 
@@ -94,9 +94,7 @@ Here’s how it works:
 
 ### 3. Bringing the Story to Life with the Illustrator Agent
 
-Once the story structure is ready, we move to the visual storytelling phase with the **Illustrator Agent**.
-
-Here’s the process:
+Once the story structure is ready, we move to the visual storytelling phase with the **Illustrator Agent**. Here’s the process:
 
 1. The quest JSON from the previous step is passed to the **Illustrator Agent**. We also fetch the generated character image from Cloud Storage, and pass it to the agent. This step is important for maintaining visual consistency - ensuring that the kid's character appears the same in each scene. 
 2. The agent enhances the image prompts for **visual consistency** across all scenes — matching colors, character poses, and setting details.  
@@ -108,9 +106,7 @@ Here’s the process:
 
 ### 4. Adding Narration with Gemini Text-to-Speech (Optional)
 
-To make stories even more immersive and accessible to all readers, we offer optional **narrated playback** using **Gemini 2.5 Flash TTS**.
-
-When a narration request is made:
+To make stories even more immersive and accessible to all readers, we offer optional **narrated playback** using **Gemini 2.5 Flash TTS**. When a narration request is made (by clicking on the sound icon):
 
 1. The frontend sends story text to `/text-to-speech`.  
 2. The backend invokes **Gemini Flash TTS**, generating expressive, child-friendly MP3 narration.  
