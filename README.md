@@ -1,6 +1,6 @@
 # Storytopia ~ Making screen time less passive – and more creative
 
-**Storytopia** transforms a child’s drawing into a narrated, illustrated 8-scene quest (story adventure), blending imagination with AI creativity. Built for the **Google Cloud Hackathon**, Storytopia demonstrates how **multi-agent orchestration with Google ADK**, **Vertex AI**, and **Cloud Run** can turn screen time into a hands-on creative adventure.
+**Storytopia** transforms a child’s drawing into a narrated, illustrated 8-scene quest (story adventure), blending imagination with AI creativity. Built for the **Google Cloud Run Hackathon**, Storytopia demonstrates how **multi-agent orchestration with Google ADK**, **Vertex AI**, and **Cloud Run** can turn screen time into a hands-on creative adventure.
 
 ---
 ![Storytopia Main Screen](https://github.com/Harpita-P/Storytopia/blob/ce180f06d415c798aa699b3cbab49e8c1f12910e/Storytopia-Main.png?raw=true)
