@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Storytopia',
-  description: 'Turn your drawings into magical animated stories',
+  description: 'Turn your child’s drawings into meaningful, interactive stories!',
 }
 
 export default function RootLayout({

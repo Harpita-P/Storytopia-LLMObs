@@ -64,26 +64,52 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
     }
   }
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) return null
 
     const rect = canvas.getBoundingClientRect()
     const scaleX = canvas.width / rect.width
     const scaleY = canvas.height / rect.height
-    const x = (e.clientX - rect.left) * scaleX
-    const y = (e.clientY - rect.top) * scaleY
+
+    let clientX: number, clientY: number
+
+    if ('touches' in e) {
+      // Touch event
+      if (e.touches.length === 0) return null
+      clientX = e.touches[0].clientX
+      clientY = e.touches[0].clientY
+    } else {
+      // Mouse event
+      clientX = e.clientX
+      clientY = e.clientY
+    }
+
+    const x = (clientX - rect.left) * scaleX
+    const y = (clientY - rect.top) * scaleY
+
+    return { x, y }
+  }
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault() // Prevent scrolling on touch
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const coords = getCoordinates(e)
+    if (!coords) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     ctx.beginPath()
-    ctx.moveTo(x, y)
+    ctx.moveTo(coords.x, coords.y)
     setIsDrawing(true)
   }
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return
+    e.preventDefault() // Prevent scrolling on touch
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -91,13 +117,10 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const rect = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
-    const x = (e.clientX - rect.left) * scaleX
-    const y = (e.clientY - rect.top) * scaleY
+    const coords = getCoordinates(e)
+    if (!coords) return
 
-    ctx.lineTo(x, y)
+    ctx.lineTo(coords.x, coords.y)
     ctx.strokeStyle = isEraser ? '#FFFFFF' : currentColor
     ctx.lineWidth = isEraser ? brushSize * 3 : brushSize
     ctx.lineCap = 'round'
@@ -217,6 +240,10 @@ export default function DrawingCanvas({ onImageGenerated, title }: DrawingCanvas
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+            onTouchCancel={stopDrawing}
             className="block cursor-crosshair"
             style={{ 
               touchAction: 'none', 

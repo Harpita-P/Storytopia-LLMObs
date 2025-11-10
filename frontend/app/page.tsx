@@ -92,6 +92,7 @@ export default function Home() {
         body: JSON.stringify({
           character_description: characterAnalysis?.character_description || '',
           character_name: characterAnalysis?.character_name || characterAnalysis?.character_type || 'Character',
+          character_image_uri: generatedCharacter,  // Pass the generated character image URI
           lesson: lessonId
         })
       })

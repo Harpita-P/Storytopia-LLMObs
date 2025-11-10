@@ -38,8 +38,6 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
   const [showConfetti, setShowConfetti] = useState(false)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
-  const [highlightedWordIndex, setHighlightedWordIndex] = useState<number>(-1)
-  const [highlightingText, setHighlightingText] = useState<string>('')
 
   const currentScene = scenes[currentPage]
   const isFirstPage = currentPage === 0
@@ -187,27 +185,13 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
   const playAudio = async (text: string, audioId: string) => {
     try {
       setPlayingAudio(audioId)
-      setHighlightingText(text)
       
       // Check if audio is already cached
       if (audioCache.has(text)) {
         const audioUrl = audioCache.get(text)!
         const audio = new Audio(audioUrl)
-        audio.onended = () => {
-          setPlayingAudio(null)
-          setHighlightedWordIndex(-1)
-          setHighlightingText('')
-        }
+        audio.onended = () => setPlayingAudio(null)
         await audio.play()
-        
-        // Start word highlighting after 5 second delay
-        const words = text.split(' ')
-        const estimatedDuration = (words.length / 150) * 60 // 150 words per minute
-        const timePerWord = estimatedDuration / words.length
-        
-        setTimeout(() => {
-          highlightWords(words, timePerWord)
-        }, 5000) // 5 second delay
         
         return
       }
@@ -234,60 +218,13 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
       
       // Play the audio
       const audio = new Audio(audioUrl)
-      audio.onended = () => {
-        setPlayingAudio(null)
-        setHighlightedWordIndex(-1)
-        setHighlightingText('')
-      }
+      audio.onended = () => setPlayingAudio(null)
       await audio.play()
-      
-      // Start word highlighting after 5 second delay
-      const words = text.split(' ')
-      const timePerWord = durationSeconds / wordCount
-      
-      setTimeout(() => {
-        highlightWords(words, timePerWord)
-      }, 5000) // 5 second delay
       
     } catch (error) {
       console.error('Error playing audio:', error)
       setPlayingAudio(null)
-      setHighlightedWordIndex(-1)
-      setHighlightingText('')
     }
-  }
-
-  const highlightWords = (words: string[], timePerWord: number) => {
-    let currentIndex = 0
-    const interval = setInterval(() => {
-      if (currentIndex < words.length) {
-        setHighlightedWordIndex(currentIndex)
-        currentIndex++
-      } else {
-        clearInterval(interval)
-        setHighlightedWordIndex(-1)
-      }
-    }, timePerWord * 1000) // Convert to milliseconds
-  }
-
-  const renderTextWithHighlight = (text: string) => {
-    if (highlightingText !== text || highlightedWordIndex === -1) {
-      return text
-    }
-    
-    const words = text.split(' ')
-    return (
-      <>
-        {words.map((word, index) => (
-          <span
-            key={index}
-            className={index === highlightedWordIndex ? 'bg-yellow-300 px-1 rounded transition-all duration-200' : ''}
-          >
-            {word}{index < words.length - 1 ? ' ' : ''}
-          </span>
-        ))}
-      </>
-    )
   }
 
   return (
@@ -383,7 +320,7 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent pt-24 pb-6 px-12">
                 <div className="flex items-center justify-center gap-4">
                   <p className="text-white text-5xl leading-relaxed font-bold drop-shadow-lg text-center flex-1">
-                    {renderTextWithHighlight(currentScene.scenario)}
+                    {currentScene.scenario}
                   </p>
                   <button
                     onClick={() => playAudio(currentScene.scenario, `scenario-${currentScene.scene_number}`)}
@@ -404,7 +341,7 @@ export default function QuestBook({ questTitle, characterName, scenes, onQuestCo
               <div className="text-center">
                 <div className="flex items-center justify-center gap-4 mb-8">
                   <h3 className="text-4xl font-bold text-black flex-1">
-                    {renderTextWithHighlight(currentScene.question)}
+                    {currentScene.question}
                   </h3>
                   <button
                     onClick={() => playAudio(currentScene.question, `question-${currentScene.scene_number}`)}
