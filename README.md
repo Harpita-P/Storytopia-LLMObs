@@ -38,8 +38,7 @@ An optional **Text-to-Speech** endpoint provides narrated playback using **Cloud
 | **Media** | Cloud Storage | – | Stores all uploads & generated assets |
 | **AI Services** | Vertex AI (Gemini + Imagen) & Cloud TTS| – | Drawing analysis, story generation, image synthesis, narrations |
 
-The frontend and backend are containerized with  dedicated **Dockerfiles** and deployable as two separate **Cloud Run services**.  
-Runtime dependencies include **Google Cloud Storage**, **Vertex AI (Gemini Flash + Imagen)**, and **Cloud TTS**.
+The frontend and backend are containerized with  dedicated **Dockerfiles** and deployable as two separate **Cloud Run services**. Runtime dependencies include **Google Cloud Storage**, **Vertex AI (Gemini Flash + Imagen)**, and **Cloud TTS**.
 
 <p align="center">
   <img src="https://github.com/Harpita-P/Storytopia/blob/62ab0873f9d73c0556d57b9b385798c24c5e06f7/Storytopia-Architecture.png?raw=true" alt="Storytopia Architecture" width="850">
