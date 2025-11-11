@@ -105,10 +105,10 @@ Once the story structure is ready, we move to the visual storytelling phase with
 
 ### 4. Adding Narration with Gemini Text-to-Speech (Optional)
 
-To make stories even more immersive and accessible to all readers, we offer optional **narrated playback** using **Gemini 2.5 Flash TTS**. When a narration request is made (by clicking on the sound icon):
+To make stories even more immersive and accessible to all readers, we offer optional **narrated playback** using **Cloud TTS**. When a narration request is made (by clicking on the sound icon):
 
 1. The frontend sends story text to `/text-to-speech`.  
-2. The backend invokes **Gemini Flash TTS**, generating expressive, child-friendly MP3 narration.  
+2. The backend invokes **Gemini TTS**, generating expressive, child-friendly MP3 narration.  
 3. The audio file is stored in **Cloud Storage**, and the returned URI allows the frontend to sync playback scene by scene.
 ---
 
