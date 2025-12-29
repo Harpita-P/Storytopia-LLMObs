@@ -34,12 +34,30 @@ def generate_all_scene_illustrations(quest_json: str, character_description: str
     """
     try:
         import time
+        from json import JSONDecodeError
         
         print(f"[Illustrator Tool] Starting illustration generation...")
         print(f"[Illustrator Tool] Character description: {character_description[:100]}...")
         
         # Parse quest data
-        quest_data = json.loads(quest_json)
+        if isinstance(quest_json, dict):
+            quest_data = quest_json
+        else:
+            try:
+                quest_data = json.loads(quest_json)
+            except JSONDecodeError:
+                # Fallback: extract the first JSON object from the string
+                try:
+                    s = str(quest_json)
+                    start = s.find("{")
+                    end = s.rfind("}")
+                    if start == -1 or end == -1:
+                        raise
+                    candidate = s[start : end + 1]
+                    quest_data = json.loads(candidate)
+                except Exception:
+                    # Preserve existing error behavior
+                    raise
         scenes = quest_data.get("scenes", [])
         
         if len(scenes) != 8:

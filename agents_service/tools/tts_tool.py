@@ -4,8 +4,11 @@ Converts text to speech using Google Cloud Gemini-TTS API
 
 import os
 import base64
-from google.cloud import texttospeech
 from typing import Optional
+
+from google.cloud import texttospeech
+from ddtrace.llmobs import LLMObs
+
 from .storage_tool import upload_to_gcs
 
 _tts_client = None
@@ -56,27 +59,68 @@ def text_to_speech(text: str, voice_name: str = "Kore") -> dict:
         response = client.synthesize_speech(
             input=synthesis_input,
             voice=voice,
-            audio_config=audio_config
+            audio_config=audio_config,
         )
-        
+
         # Upload audio to GCS
         audio_uri = upload_to_gcs(
             file_data=response.audio_content,
             filename="audio.mp3",
-            content_type="audio/mpeg"
+            content_type="audio/mpeg",
         )
         
         # Estimate duration: average speaking rate is ~150 words per minute for children's content
         word_count = len(text.split())
         estimated_duration = (word_count / 150) * 60  # Convert to seconds
-        
+
+        # Datadog LLM Observability: submit TTS success evaluation
+        try:
+            span_ctx = LLMObs.export_span(span=None)
+            LLMObs.submit_evaluation(
+                span=span_ctx,
+                ml_app="storytopia-backend",
+                label="tts_status",
+                metric_type="score",
+                value=1.0,
+                tags={
+                    "component": "tts_tool",
+                    "voice": str(voice_name),
+                    "status": "success",
+                },
+                assessment="pass",
+                reasoning="Text-to-speech synthesis and upload to GCS succeeded.",
+            )
+        except Exception:
+            # Never fail the request due to observability issues
+            pass
+
         return {
             "audio_uri": audio_uri,
             "duration_seconds": estimated_duration,
-            "word_count": word_count
+            "word_count": word_count,
         }
-        
+
     except Exception as e:
+        # Datadog LLM Observability: submit TTS failure evaluation
+        try:
+            span_ctx = LLMObs.export_span(span=None)
+            LLMObs.submit_evaluation(
+                span=span_ctx,
+                ml_app="storytopia-backend",
+                label="tts_status",
+                metric_type="score",
+                value=0.0,
+                tags={
+                    "component": "tts_tool",
+                    "voice": str(voice_name),
+                    "status": "failure",
+                },
+                assessment="fail",
+                reasoning=f"Text-to-speech synthesis failed: {str(e)}",
+            )
+        except Exception:
+            pass
+
         raise Exception(f"Failed to generate speech: {str(e)}")
 
 def generate_scene_audio(scene_text: str, option1_text: str, option2_text: str) -> dict:

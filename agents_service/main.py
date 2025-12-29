@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
+from ddtrace.llmobs import LLMObs
+from ddtrace.llmobs.decorators import llm
 
 # Load environment variables
 load_dotenv()
@@ -43,6 +45,7 @@ class CreateQuestRequest(BaseModel):
     character_description: str
     character_name: str
     lesson: str
+    character_image_uri: str | None = None
 
 class TextToSpeechRequest(BaseModel):
     text: str
@@ -125,6 +128,11 @@ async def health_check():
     }
 
 @app.post("/generate-character")
+@llm(
+    model_name="gemini-2.0-flash-exp",
+    name="visionizer_generate_character",
+    model_provider="google",
+)
 async def generate_character(
     drawing_data: str = Form(...),
     user_id: str = Form(...)
@@ -142,6 +150,7 @@ async def generate_character(
     try:
         from tools.storage_tool import upload_base64_to_gcs
         from agents.visionizer import visionizer_agent
+        from agents.agent_ops import agent_ops
         
         # Upload drawing to GCS
         drawing_uri = upload_base64_to_gcs(
@@ -265,22 +274,204 @@ async def generate_character(
             }
         
         if not result.get("success"):
+            # For failed Visionizer runs, still emit an evaluation so we can monitor failure rates
+            try:
+                span_ctx = LLMObs.export_span(span=None)
+
+                analysis_for_flag = result.get("analysis") or {}
+                age_appropriate = False
+                if isinstance(analysis_for_flag, dict) and "age_appropriate" in analysis_for_flag:
+                    age_appropriate = bool(analysis_for_flag.get("age_appropriate"))
+
+                # For monitoring, treat any failed run as a flag = 1.0
+                inappropriate_flag_value = 1.0
+
+                LLMObs.submit_evaluation(
+                    span=span_ctx,
+                    ml_app="storytopia-backend",
+                    label="inappropriate_content_flag",
+                    metric_type="score",
+                    value=inappropriate_flag_value,
+                    tags={
+                        "agent": "visionizer",
+                        "task": "kids_drawing",
+                        "status": "failed",
+                    },
+                    assessment="fail",
+                    reasoning=(
+                        "Visionizer run failed; drawing marked inappropriate."
+                        if not age_appropriate
+                        else "Visionizer run failed before completion (e.g., model or Imagen error)."
+                    ),
+                )
+                print(
+                    f"[LLMObs] Submitted failure evaluation inappropriate_content_flag={inappropriate_flag_value}"
+                )
+            except Exception as e:
+                import traceback
+                print(f"[LLMObs] ERROR submitting failure evaluation: {e}")
+                print(traceback.format_exc())
+
             # User-friendly error message
             user_message = "Oops, that didn't work. Try again and make sure your drawing is appropriate!"
             raise HTTPException(
                 status_code=400,
                 detail=user_message
             )
+
+        # ------------------------------------------------------------------
+        # AgentOps: compute creative_intent_score for Visionizer output
+        # ------------------------------------------------------------------
+        creative_intent_score = None
+        agent_ops_reasoning = None
+        try:
+            character_description = result.get("character_description", "") or ""
+            analysis = result.get("analysis", {}) or {}
+
+            if character_description:
+                # Prepare input for AgentOps summarizing analysis and description
+                agent_ops_input = (
+                    "Evaluate the Visionizer output for this drawing.\n\n"
+                    "ANALYSIS (JSON):\n" + json.dumps(analysis) + "\n\n"
+                    "CHARACTER DESCRIPTION:\n" + character_description + "\n\n"
+                    "Return the creative_intent_score JSON as specified."
+                )
+
+                # Ensure a dedicated session exists for AgentOps
+                agent_ops_session_id = f"{session_id}_agent_ops"
+                try:
+                    await session_service.create_session(
+                        app_name=APP_NAME,
+                        user_id=user_id,
+                        session_id=agent_ops_session_id,
+                        state={},
+                    )
+                except Exception:
+                    # Session might already exist; ignore
+                    pass
+
+                agent_ops_runner = Runner(
+                    agent=agent_ops,
+                    app_name=APP_NAME,
+                    session_service=session_service,
+                )
+
+                ops_message = types.Content(
+                    role="user",
+                    parts=[types.Part(text=agent_ops_input)],
+                )
+
+                agent_ops_text = ""
+                async for event in agent_ops_runner.run_async(
+                    user_id=user_id,
+                    session_id=agent_ops_session_id,
+                    new_message=ops_message,
+                ):
+                    if event.content and event.content.parts:
+                        for part in event.content.parts:
+                            if hasattr(part, "text") and part.text:
+                                agent_ops_text = part.text
+
+                if agent_ops_text:
+                    try:
+                        ops_payload = extract_json_block(agent_ops_text)
+                        raw_score = ops_payload.get("creative_intent_score")
+                        if isinstance(raw_score, (int, float)):
+                            # Clamp for safety
+                            creative_intent_score = max(0.0, min(1.0, float(raw_score)))
+                        agent_ops_reasoning = ops_payload.get("reasoning")
+                    except Exception as parse_err:
+                        print(f"[AgentOps] Failed to parse AgentOps JSON: {parse_err}")
+            else:
+                print("[AgentOps] Skipping AgentOps scoring: empty character_description")
+        except Exception as e:
+            import traceback
+            print(f"[AgentOps] ERROR while computing creative_intent_score: {e}")
+            print(traceback.format_exc())
+
+        # ------------------------------------------------------------------
+        # Datadog LLM Observability: submit evaluations for Visionizer
+        #  - creative_intent_score (0.0–1.0) from AgentOps
+        #  - inappropriate_content_flag (0 or 1) from age_appropriate
+        # ------------------------------------------------------------------
+        if creative_intent_score is not None or result.get("analysis") is not None:
+            try:
+                # Capture the current active LLMObs/trace span context
+                span_ctx = LLMObs.export_span(span=None)
+
+                # 1) Creative intent score evaluation (unchanged behavior)
+                if creative_intent_score is not None:
+                    LLMObs.submit_evaluation(
+                        span=span_ctx,
+                        ml_app="storytopia-backend",
+                        label="creative_intent_score",
+                        metric_type="score",
+                        value=creative_intent_score,
+                        tags={
+                            "agent": "visionizer",
+                            "task": "kids_drawing",
+                        },
+                        assessment="pass" if creative_intent_score >= 0.5 else "fail",
+                        reasoning=agent_ops_reasoning
+                        or "AgentOps evaluated character_description detail and coherence.",
+                    )
+                    print(
+                        f"[LLMObs] Submitted evaluation creative_intent_score={creative_intent_score}"
+                    )
+
+                # 2) Inappropriate content flag evaluation from age_appropriate
+                analysis_for_flag = result.get("analysis") or {}
+                if isinstance(analysis_for_flag, dict):
+                    # Default to appropriate (0) if key is missing
+                    age_appropriate = bool(analysis_for_flag.get("age_appropriate", True))
+                    # Metric semantics: 0 = appropriate, 1 = inappropriate
+                    inappropriate_flag_value = 0.0 if age_appropriate else 1.0
+
+                    LLMObs.submit_evaluation(
+                        span=span_ctx,
+                        ml_app="storytopia-backend",
+                        label="inappropriate_content_flag",
+                        metric_type="score",
+                        value=inappropriate_flag_value,
+                        tags={
+                            "agent": "visionizer",
+                            "task": "kids_drawing",
+                        },
+                        assessment="pass" if age_appropriate else "fail",
+                        reasoning=(
+                            "Drawing marked age_appropriate by Visionizer analysis."
+                            if age_appropriate
+                            else "Drawing marked inappropriate by Visionizer analysis."
+                        ),
+                    )
+                    print(
+                        f"[LLMObs] Submitted evaluation inappropriate_content_flag={inappropriate_flag_value}"
+                    )
+            except Exception as e:
+                import traceback
+                print(f"[LLMObs] ERROR submitting Visionizer evaluations: {e}")
+                print(traceback.format_exc())
         
-        # Return the result - handle both cases where fields might be in result or need extraction
-        return {
+        # Return the result - include AgentOps metrics when available
+        response = {
             "status": "success",
             "drawing_uri": drawing_uri,
             "analysis": result.get("analysis", {}),
             "generated_character_uri": result.get("generated_character_uri", ""),
             "character_type": result.get("character_type", ""),
-            "character_description": result.get("character_description", "")
+            "character_description": result.get("character_description", ""),
         }
+
+        # Attach observability metrics under a dedicated key for Datadog later
+        if creative_intent_score is not None:
+            response["agent_metrics"] = {
+                "visionizer": {
+                    "creative_intent_score": creative_intent_score,
+                    "agent_ops_reasoning": agent_ops_reasoning,
+                }
+            }
+
+        return response
         
     except HTTPException:
         raise
@@ -293,6 +484,11 @@ async def generate_character(
 
 
 @app.post("/create-quest")
+@llm(
+    model_name="gemini-2.0-pro-exp",
+    name="quest_creator_create_quest",
+    model_provider="google",
+)
 async def create_quest(request: CreateQuestRequest):
     """
     Creates an interactive quest with 8 scenes
@@ -308,10 +504,13 @@ async def create_quest(request: CreateQuestRequest):
     try:
         from agents.quest_creator import quest_creator_agent
         from agents.illustrator import illustrator_agent
+        from agents.agent_ops import agent_ops_quest, agent_ops_illustrator
         
         character_description = request.character_description
         character_name = request.character_name
         lesson = request.lesson
+        # Optional: original generated character image URI for consistency checks
+        character_image_uri = getattr(request, "character_image_uri", None)
         
         if not character_description or not lesson:
             raise HTTPException(
@@ -519,7 +718,229 @@ CRITICAL CONSISTENCY REQUIREMENTS:
                 print(f"[API] Warning: scene_images is not a valid list, skipping image merge")
         
         print(f"[API] Quest creation complete!")
-        
+
+        # ------------------------------------------------------------------
+        # AgentOps (Illustrator): compute illustrator_consistency for scene 3
+        # ------------------------------------------------------------------
+        illustrator_consistency_score = None
+        illustrator_consistency_reasoning = None
+        try:
+            # We need both the original character image and a scene image
+            if character_image_uri:
+                # Prefer scene 3 if available
+                scene3_uri = None
+                if illustration_data and illustration_data.get("success"):
+                    scene_images_list = illustration_data.get("scene_images", [])
+                    # scene_images_list entries may be dicts with scene_number & image_uri
+                    for img in scene_images_list:
+                        if (
+                            isinstance(img, dict)
+                            and img.get("scene_number") == 3
+                        ):
+                            scene3_uri = img.get("image_uri") or None
+                            break
+
+                # Fallback: look in quest_data scenes (after merge)
+                if not scene3_uri:
+                    for scene in quest_data.get("scenes", []):
+                        if scene.get("scene_number") == 3:
+                            scene3_uri = scene.get("image_uri") or None
+                            break
+
+                if scene3_uri:
+                    # Ensure a dedicated session exists for Illustrator AgentOps
+                    agent_ops_illustrator_session_id = f"{session_id}_agent_ops_illustrator"
+                    try:
+                        await session_service.create_session(
+                            app_name=APP_NAME,
+                            user_id=user_id,
+                            session_id=agent_ops_illustrator_session_id,
+                            state={},
+                        )
+                    except Exception:
+                        # Session might already exist; ignore
+                        pass
+
+                    illustrator_ops_runner = Runner(
+                        agent=agent_ops_illustrator,
+                        app_name=APP_NAME,
+                        session_service=session_service,
+                    )
+
+                    illustrator_ops_input = (
+                        "Evaluate Illustrator character consistency for scene 3.\n\n"
+                        f"original_character_image_uri: {character_image_uri}\n"
+                        f"scene_image_uri: {scene3_uri}\n\n"
+                        "Return the illustrator_consistency_score JSON as specified."
+                    )
+
+                    illustrator_ops_message = types.Content(
+                        role="user",
+                        parts=[types.Part(text=illustrator_ops_input)],
+                    )
+
+                    illustrator_ops_text = ""
+                    async for event in illustrator_ops_runner.run_async(
+                        user_id=user_id,
+                        session_id=agent_ops_illustrator_session_id,
+                        new_message=illustrator_ops_message,
+                    ):
+                        if event.content and event.content.parts:
+                            for part in event.content.parts:
+                                if hasattr(part, "text") and part.text:
+                                    illustrator_ops_text = part.text
+
+                    if illustrator_ops_text:
+                        try:
+                            illustrator_payload = extract_json_block(illustrator_ops_text)
+                            raw_score = illustrator_payload.get("illustrator_consistency_score")
+                            if isinstance(raw_score, (int, float)):
+                                illustrator_consistency_score = max(
+                                    0.0, min(1.0, float(raw_score))
+                                )
+                            illustrator_consistency_reasoning = illustrator_payload.get(
+                                "reasoning"
+                            )
+                        except Exception as parse_err:
+                            print(
+                                f"[AgentOps-Illustrator] Failed to parse illustrator_consistency JSON: {parse_err}"
+                            )
+                else:
+                    print(
+                        "[AgentOps-Illustrator] Skipping illustrator_consistency: missing scene 3 image URI"
+                    )
+            else:
+                print(
+                    "[AgentOps-Illustrator] Skipping illustrator_consistency: missing character_image_uri"
+                )
+        except Exception as e:
+            import traceback
+
+            print(f"[AgentOps-Illustrator] ERROR while computing illustrator_consistency: {e}")
+            print(traceback.format_exc())
+
+        # ------------------------------------------------------------------
+        # AgentOps (Quest): compute lesson_alignment_score for Quest Creator
+        # ------------------------------------------------------------------
+        lesson_alignment_score = None
+        lesson_alignment_reasoning = None
+        try:
+            # Prepare input summarizing the lesson, character, and generated quest
+            from agents.agent_ops import agent_ops_quest
+
+            # Ensure a dedicated session exists for AgentOps (Quest)
+            agent_ops_quest_session_id = f"{session_id}_agent_ops_quest"
+            try:
+                await session_service.create_session(
+                    app_name=APP_NAME,
+                    user_id=user_id,
+                    session_id=agent_ops_quest_session_id,
+                    state={},
+                )
+            except Exception:
+                # Session might already exist; ignore
+                pass
+
+            agent_ops_runner = Runner(
+                agent=agent_ops_quest,
+                app_name=APP_NAME,
+                session_service=session_service,
+            )
+
+            quest_eval_input = (
+                "Evaluate how well this quest aligns with the target lesson.\n\n"
+                f"LESSON: {lesson}\n"
+                f"CHARACTER DESCRIPTION: {character_description}\n\n"
+                "QUEST DATA (JSON):\n" + json.dumps(quest_data)
+            )
+
+            quest_ops_message = types.Content(
+                role="user",
+                parts=[types.Part(text=quest_eval_input)],
+            )
+
+            quest_ops_text = ""
+            async for event in agent_ops_runner.run_async(
+                user_id=user_id,
+                session_id=agent_ops_quest_session_id,
+                new_message=quest_ops_message,
+            ):
+                if event.content and event.content.parts:
+                    for part in event.content.parts:
+                        if hasattr(part, "text") and part.text:
+                            quest_ops_text = part.text
+
+            if quest_ops_text:
+                try:
+                    ops_payload = extract_json_block(quest_ops_text)
+                    raw_score = ops_payload.get("lesson_alignment_score")
+                    if isinstance(raw_score, (int, float)):
+                        lesson_alignment_score = max(0.0, min(1.0, float(raw_score)))
+                    lesson_alignment_reasoning = ops_payload.get("reasoning")
+                except Exception as parse_err:
+                    print(f"[AgentOps-Quest] Failed to parse lesson_alignment_score JSON: {parse_err}")
+        except Exception as e:
+            import traceback
+            print(f"[AgentOps-Quest] ERROR while computing lesson_alignment_score: {e}")
+            print(traceback.format_exc())
+
+        # Datadog LLM Observability: submit external evaluations for Quest Creator & Illustrator
+        if lesson_alignment_score is not None or illustrator_consistency_score is not None:
+            try:
+                from ddtrace.llmobs import LLMObs
+
+                span_ctx = LLMObs.export_span(span=None)
+
+                # Lesson alignment evaluation
+                if lesson_alignment_score is not None:
+                    LLMObs.submit_evaluation(
+                        span=span_ctx,
+                        ml_app="storytopia-backend",
+                        label="lesson_alignment_score",
+                        metric_type="score",
+                        value=lesson_alignment_score,
+                        tags={
+                            "agent": "quest_creator",
+                            "task": str(lesson),
+                        },
+                        assessment="pass" if lesson_alignment_score >= 0.7 else "fail",
+                        reasoning=lesson_alignment_reasoning
+                        or "AgentOps evaluated how well quest scenes align with the target lesson.",
+                    )
+                    print(
+                        f"[LLMObs] Submitted evaluation lesson_alignment_score={lesson_alignment_score}"
+                    )
+
+                # Illustrator consistency evaluation (scene 3)
+                if illustrator_consistency_score is not None:
+                    LLMObs.submit_evaluation(
+                        span=span_ctx,
+                        ml_app="storytopia-backend",
+                        label="illustrator_consistency",
+                        metric_type="score",
+                        value=illustrator_consistency_score,
+                        tags={
+                            "agent": "illustrator",
+                            "scene": "3",
+                            "task": str(lesson),
+                        },
+                        assessment=(
+                            "pass"
+                            if illustrator_consistency_score >= 0.8
+                            else "fail"
+                        ),
+                        reasoning=illustrator_consistency_reasoning
+                        or "AgentOps evaluated how well scene 3 illustration preserves character identity and style.",
+                    )
+                    print(
+                        "[LLMObs] Submitted evaluation illustrator_consistency="
+                        f"{illustrator_consistency_score}"
+                    )
+            except Exception as e:
+                import traceback
+                print(f"[LLMObs] ERROR submitting lesson_alignment_score evaluation: {e}")
+                print(traceback.format_exc())
+
         return {
             "status": "success",
             "quest_title": quest_data.get("quest_title", f"{character_name}'s Adventure"),
@@ -537,6 +958,11 @@ CRITICAL CONSISTENCY REQUIREMENTS:
         raise HTTPException(status_code=500, detail="Oops, please try again!")
 
 @app.post("/text-to-speech")
+@llm(
+    model_name="gemini-2.0-flash-exp",
+    name="tts_generate_speech",
+    model_provider="google",
+)
 async def generate_speech(request: TextToSpeechRequest):
     """
     Convert text to speech using Google Cloud TTS
