@@ -1,10 +1,13 @@
-![Storytopia LLObs Main Screen](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/0a7d8106ebe6ea066d3419987b15910c8272753e/Storytopia%20LLMobs%20Main.png)
+![Storytopia LLM Observability Banner](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/5114a5aaa49093debd250772204cf2c492c6d65a/Github-Banner.png)
 
-We built a **Datadog-powered observability layer** into our app **Storytopia** using **Datadog’s LLM Observability SDK** to capture rich telemetry on our AI agents. We created a custom Datadog dashboard with multiple widgets to monitor LLM operational insights.  
+We built a **Datadog-powered observability layer** into our app **Storytopia** using **Datadog’s LLM Observability SDK** to capture rich telemetry on our AI agents. 
 
-What makes our approach unique is that we go beyond standard LLM telemetry – such as cost, latency, errors, and request traces – to also stream **custom AI Agent Evaluation telemetry** that reflects how our multi-agent system behaves in production. We stream 5 custom evaluation signals to Datadog to measure **agent quality, safety indicators, and creative consistency** across different user drawings and story inputs.  On top of these signals, we configured custom Datadog alert monitors that trigger when evaluation metrics degrade, with **actionable case context** to quickly investigate and respond to issues.
+What makes our approach unique is that we go beyond standard LLM telemetry – such as cost, latency, errors, and request traces – to also stream **custom AI Agent Evaluation telemetry** that reflects how our multi-agent system behaves in production. We stream 5 custom evaluation signals to Datadog to measure **agent quality, safety indicators, and creative consistency** across different user drawings and story inputs.  On top of these signals, we configured custom Datadog alert monitors that trigger when evaluation metrics degrade, with actionable case context to quickly investigate and respond to issues. We created a custom Datadog dashboard with multiple widgets to monitor LLM operational insights.  
 
 ---
+🔗 **View Storytopia's Datadog Dashboard**  
+https://p.us5.datadoghq.com/sb/c7d3a3fb-e381-11f0-84dd-828a698ac737-4c196bb0c4c7eefb0add01f19bff8a5f
+
 ## Running Storytopia with Datadog LLM Observability
 
 To run the Storytopia backend locally with Datadog LLM Observability enabled, set the Datadog environment variables and start the app under the Datadog tracer wrapper:
@@ -80,5 +83,4 @@ You can access the hosted version of **Storytopia** here:
 - Character generation: ~15 seconds  
 - Quest generation: ~2.5 minutes  
   _(Actual times may vary depending on model loads and network conditions.)_  
-- Demo video and GIF examples are **sped up for presentation purposes**.
 ---
