@@ -1,6 +1,6 @@
 ![Storytopia LLM Observability Banner](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/5114a5aaa49093debd250772204cf2c492c6d65a/Github-Banner.png)
 
-We built a **Datadog-powered observability layer** into our app **Storytopia** using **Datadog’s LLM Observability SDK** to capture rich telemetry on our AI agents. To learn more about how the Storytopia app works, **watch our demo video** - https://youtu.be/BhiitgdIuEI?si=FYKTivFRG2D_bhGR
+We built a **Datadog-powered observability layer** into our existing app **Storytopia** using **Datadog’s LLM Observability SDK** to capture rich telemetry on our AI agents. To learn more about how the Storytopia app works, **watch our demo video** - https://youtu.be/BhiitgdIuEI?si=FYKTivFRG2D_bhGR
 
 
 What makes our observability approach unique is that we go beyond standard LLM telemetry – such as cost, latency, errors, and request traces – to also stream **custom AI Agent Evaluation telemetry** that reflects how our multi-agent system behaves in production. We stream 5 custom evaluation signals to Datadog to measure **agent quality, safety indicators, and creative consistency** across different user drawings and story inputs.  On top of these signals, we configured custom Datadog alert monitors that trigger when evaluation metrics degrade, with actionable case context to quickly investigate and respond to issues. We created a custom Datadog dashboard with multiple widgets to monitor LLM operational insights.  
