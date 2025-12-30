@@ -66,9 +66,21 @@ By correlating these 5 unique signals – **Creative Intent, Inappropriate Conte
 
 ## Custom Alert Monitors with Actionable Context
 
-We built 5 Datadog monitors directly on top of our custom evaluation signals to detect degradations in AI agent behavior in near real time. Each monitor includes actionable context, such as:
-- Clear descriptions of what signal degraded and why it matters  
-- Suggested next steps for team members (e.g. reviewing LLM prompts, inspecting recent inputs, testing for false positives in cases of flagged inappropriate content) 
+We built **7 custom Datadog alert monitors** directly on top of Storytopia’s LLM evaluation signals to detect degradations in AI agent behavior in near real time. Each monitor encodes a clear behavioral expectation for our agents and pairs detection with concrete response guidance.
+
+**Criteria for Each of Our Detection Rules**
+
+| Monitor Name | Detection Criteria | Purpose / Impact |
+|-------------|-------------------|------------------|
+| **Inappropriate Content Detection Spike** | Avg `inappropriate_content_flag` ≥ **0.6** over 5 minutes | Surfaces Visionizer safety failures, false positives, or prompt abuse early to protect child safety |
+| **Lesson Prompt Drift Detection** | Avg `lesson_alignment_score` < **0.6** over 5 minutes | Ensures agents remain aligned with educational objectives, not just creative output |
+| **Character Visual Consistency Degradation** | Avg `illustrator_consistency` < **0.7** over 5 minutes | Catches character identity drift across scenes to preserve narrative continuity |
+| **Story Voice (TTS) Agent Failure** | `tts_status` success rate < **50%** | Detects narration failures caused by TTS errors, quota exhaustion, or queue issues |
+| **Character Description Quality Regression** | Avg `creative_intent_score` < **0.5** over 5 minutes | Flags low-fidelity character descriptions that reduce immersion and visual grounding |
+| **Average Cost Per Story Spike** | Computed cost per story > **$1.80** (rolling 5 minutes) | Prevents budget overruns from token bloat, agent loops, or unintended model upgrades |
+| **LLM Response Latency Spike** | Avg LLM span duration > **18s** | Catches performance regressions that degrade the real-time storytelling experience |
+
+![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
 
 This allows us to respond to any issues quickly and precisely, turning observability insights into concrete fixes & improvements.
 ![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
