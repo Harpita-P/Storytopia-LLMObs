@@ -80,8 +80,6 @@ We built **7 custom Datadog alert monitors** directly on top of Storytopia’s L
 | **Average Cost Per Story Spike** | Computed cost per story > **$1.80** (rolling 5 minutes) | Prevents budget overruns from token bloat, agent loops, or unintended model upgrades |
 | **LLM Response Latency Spike** | Avg LLM span duration > **18s** | Catches performance regressions that degrade the real-time storytelling experience |
 
-![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
-
 This allows us to respond to any issues quickly and precisely, turning observability insights into concrete fixes & improvements.
 ![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
 
