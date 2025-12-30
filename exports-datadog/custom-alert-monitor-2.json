@@ -1,0 +1,22 @@
+{
+	"id": 17319479,
+	"name": "Agent is drifting from expected lesson prompt!",
+	"type": "llm-observability alert",
+	"query": "llm-observability(\"@event_type:span @ml_app:storytopia-backend\").rollup(\"avg\", \"@evaluations.custom.lesson_alignment_score\").last(\"5m\") < 0.6",
+	"message": "{{#is_alert}}\n🚨 **Agent is drifting from expected lesson prompt!**\n\n## Signal\n- **Avg lesson_alignment_score**: {{value}} (Alert: <0.6, Warning: <0.7)\n- **Agent reasoning** diverging from educational goals\n- **Last 5m** across storytopia-backend LLM spans\n\n## Why it matters\nAgent responses ignore lesson objectives → kids miss educational value → defeats Storytopia learning mission.\n\n## Immediate actions\n1. **Failing traces**: {{trace_search}}@evaluations.custom.lesson_alignment_score.assessment:fail\n2. **Check agent reasoning**: Review `@reasoning` spans for off-topic tangents\n3. **Inspect lesson prompts**: Verify curriculum alignment in system prompt\n\n## Fix paths\n- **Strengthen lesson guardrails**: Add explicit \"Must teach [lesson_objective]\" to system prompt\n- **Review recent prompt changes**: Rollback any agent prompt modifications\n- **Test offline**: Run 5 story prompts through agent, score alignment manually\n- **Model temperature**: Reduce if creativity overrides lesson focus\n\n@agent-oncall @curriculum-team\n{{/is_alert}}\n\n{{#is_warning}}\n⚠️ **Lesson alignment warning**\nAvg score {{value}} (approaching 0.6 threshold). Review agent traces proactively.\n{{/is_warning}}\n\n{{#is_recovery}}\n✅ **Lesson alignment recovered**\nScore back to {{value}} after {{recovery_time}}\n{{/is_recovery}}",
+	"tags": [],
+	"options": {
+		"thresholds": {
+			"critical": 0.6,
+			"warning": 0.7
+		},
+		"enable_logs_sample": false,
+		"notify_audit": false,
+		"on_missing_data": "default",
+		"include_tags": false,
+		"new_host_delay": 300,
+		"groupby_simple_monitor": false
+	},
+	"priority": 3,
+	"draft_status": "published"
+}

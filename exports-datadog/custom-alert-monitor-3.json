@@ -1,0 +1,22 @@
+{
+	"id": 17319497,
+	"name": "Character is not visually consistent across story scenes!",
+	"type": "llm-observability alert",
+	"query": "llm-observability(\"@event_type:span @ml_app:storytopia-backend\").rollup(\"avg\", \"@evaluations.custom.illustrator_consistency\").last(\"5m\") < 0.7",
+	"message": "{{#is_alert}}\n🚨 **Character is not visually consistent across story scenes!**\n\n## What's happening\nVisual consistency score dropped below threshold - characters appear with different features across scenes.\n\n**Warning**: < 0.8 | **Alert**: < 0.7\n\n## Signal details\n- **Current score**: {{value}}\n- **Warning threshold**: 0.8\n- **Alert threshold**: 0.7\n- **Agent**: {{agent.name}}\n- **Time window**: {{window}}\n\n## Trace searches\n[{{trace_search}}@evaluation.external.character_visual_consistency.assessment:fail]\n\n## Immediate actions\n1. Review failing traces (screenshot 3-5 bad examples)\n2. Check Visionizer prompt vs last good version\n3. Verify model params (guidance scale)\n\n## Fix paths\n- Rollback recent changes\n- Stress on character reference image\n- Test 5 scenes offline (>0.8 score)\n\n@visionizer-oncall @art-direction\n{{/is_alert}}\n\n{{#is_warning}}\n⚠️ **Character consistency warning** - Avg {{value}} (approaching 0.7)\n{{/is_warning}}\n\n{{#is_recovery}}\n✅ **Consistency restored** - Score {{value}} ≥ 0.8 ({{recovery_time}})\n{{/is_recovery}}",
+	"tags": [],
+	"options": {
+		"thresholds": {
+			"critical": 0.7,
+			"warning": 0.8
+		},
+		"enable_logs_sample": false,
+		"notify_audit": false,
+		"on_missing_data": "default",
+		"include_tags": false,
+		"new_host_delay": 300,
+		"groupby_simple_monitor": false
+	},
+	"priority": 2,
+	"draft_status": "published"
+}

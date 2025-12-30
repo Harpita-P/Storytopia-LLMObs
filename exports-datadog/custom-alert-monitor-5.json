@@ -1,0 +1,22 @@
+{
+	"id": 17317062,
+	"name": "Character description quality is degrading!",
+	"type": "llm-observability alert",
+	"query": "llm-observability(\"@event_type:span @parent_id:undefined @ml_app:storytopia-backend\").rollup(\"avg\", \"@evaluations.custom.creative_intent_score\").last(\"5m\") < 0.5",
+	"message": "{{#is_alert}}\n🚨 **Character description quality is degrading!**\n\n## Signal\n- **Avg creative_intent_score**: {{value}} (Alert: <0.5, Warning: <0.8)\n- **Visionizer agent** LLM output quality degrading on storytopia-backend\n- **Last 5m** across LLM spans\n\n## Why it matters\nCharacter descriptions lack detail → reduces experience quality → kids can't visualize the characters they draw accurately.\n\n## Immediate actions\n1. **Failing traces**: {{trace_search}}@evaluations.custom.creative_intent_score.assessment:fail\n2. **Check Visionizer prompt**: Missing colors/emotions/backgrounds?\n3. **AgentOps reasoning**: Review low-score explanations\n\n## Fix paths\n- Tighten system prompt: \"Include color, emotion, pose, background\"\n- Test prompt offline: Generate 5 descriptions, score manually\n- Rollback any recent prompt/model changes\n\n@visionizer-oncall @genai-platform\n{{/is_alert}}\n\n{{#is_warning}}\n⚠️ **Character description quality warning**\nAvg score {{value}} (approaching 0.8 threshold). Check traces proactively.\n{{/is_warning}}\n\n{{#is_recovery}}\n✅ **Description quality recovered**\nScore back to {{value}} after {{recovery_time}}\n{{/is_recovery}}",
+	"tags": [],
+	"options": {
+		"thresholds": {
+			"critical": 0.5,
+			"warning": 0.8
+		},
+		"enable_logs_sample": false,
+		"notify_audit": false,
+		"on_missing_data": "default",
+		"include_tags": false,
+		"new_host_delay": 300,
+		"groupby_simple_monitor": false
+	},
+	"priority": 3,
+	"draft_status": "published"
+}

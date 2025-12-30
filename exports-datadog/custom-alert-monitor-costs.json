@@ -1,0 +1,85 @@
+{
+	"id": 17352643,
+	"name": "Average Cost Per Story Generation has spiked!",
+	"type": "llm-observability alert",
+	"query": "formula(\"(metric1 + metric2 + metric3 + metric4) / 7\").last(\"5m\") > 1.8",
+	"message": "🚨 **Average Cost Per Story Generation has spiked!**\n\n{{#is_alert}}\n## Condition\n**Avg cost per story**: ${{value}} (Threshold: >2)\n**Storytopia pipeline** burning through budget\n**Last 15m** across all agents (Visionizer/TTS/Story)\n\n## Why it matters\nCost explosion → budget exhaustion \n\n## Possible causes\n- **Token bloat**: Prompts/stories growing uncontrollably long\n- **Looping agents**: Infinite reasoning / regeneration cycles\n- **Quota bypass**: Fallback to Gemini pro version model\n\n## Immediate Actions\n1. **Check recent traces**: {{trace_search}}`cost:*` - sort by highest spenders\n2. **Agent cost breakdown**: Visionizer (images) vs TTS vs Story agents\n3. **Model usage**: `@model.name:gemini\n\n## Fix Paths\n- **Cache hits**: Enable prompt/image caching for repeated elements\n- **Token limits**: Hard cap on max tokens per story/agent\n\n@infra-oncall @genai-platform\n#storytopia #cost #budget\n{{/is_alert}}\n\n{{#is_warning}}\n⚠️ **Cost warning** - Avg ${{value}} (approaching 2 threshold at 1.5)\n{{/is_warning}}\n\n{{#is_recovery}}\n✅ **Cost normalized** - Back to ${{value}}/story ({{recovery_time}})\n{{/is_recovery}}",
+	"tags": [],
+	"options": {
+		"thresholds": {
+			"critical": 1.8,
+			"warning": 1.5
+		},
+		"enable_logs_sample": false,
+		"notify_audit": false,
+		"on_missing_data": "default",
+		"variables": [
+			{
+				"data_source": "llm_observability",
+				"name": "metric1",
+				"indexes": [
+					"*"
+				],
+				"compute": {
+					"aggregation": "sum",
+					"metric": "@metrics.estimated_non_cached_input_cost"
+				},
+				"group_by": [],
+				"search": {
+					"query": "@ml_app:storytopia-backend @event_type:span @parent_id:*"
+				},
+				"storage": "hot"
+			},
+			{
+				"data_source": "llm_observability",
+				"name": "metric2",
+				"indexes": [
+					"*"
+				],
+				"compute": {
+					"aggregation": "sum",
+					"metric": "@metrics.estimated_cache_read_input_cost"
+				},
+				"group_by": [],
+				"search": {
+					"query": "@ml_app:storytopia-backend @event_type:span @parent_id:*"
+				}
+			},
+			{
+				"data_source": "llm_observability",
+				"name": "metric3",
+				"indexes": [
+					"*"
+				],
+				"compute": {
+					"aggregation": "sum",
+					"metric": "@metrics.estimated_cache_write_input_cost"
+				},
+				"group_by": [],
+				"search": {
+					"query": "@ml_app:storytopia-backend @event_type:span @parent_id:*"
+				}
+			},
+			{
+				"data_source": "llm_observability",
+				"name": "metric4",
+				"indexes": [
+					"*"
+				],
+				"compute": {
+					"aggregation": "sum",
+					"metric": "@metrics.estimated_output_cost"
+				},
+				"group_by": [],
+				"search": {
+					"query": "@ml_app:storytopia-backend @event_type:span @parent_id:*"
+				}
+			}
+		],
+		"include_tags": false,
+		"new_host_delay": 300,
+		"groupby_simple_monitor": false
+	},
+	"priority": 2,
+	"draft_status": "published"
+}

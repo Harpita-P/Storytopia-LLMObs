@@ -1,0 +1,23 @@
+{
+	"id": 17352682,
+	"name": "LLM Response Latency Spiking!",
+	"type": "query alert",
+	"query": "avg(last_5m):avg:ml_obs.span.duration{span_kind:llm} > 18",
+	"message": "🚨 **LLM Response Latency Spiking!**\n\n{{#is_alert}}\n## Condition\n**Avg LLM latency**: {{value}}s (Alert: >18s, Warning: >15s)\n**span_kind:llm** spans across Storytopia agents\n**Last 5m** evaluation window\n\n## Why it matters\nSlow responses → poor user experience → kids abandon stories\n\n## Immediate Actions\n1. **Slowest traces**: {{trace_search}}`span_kind:llm duration:>15s`\n2. **Agent breakdown**: Visionizer vs TTS vs Story agents\n3. **Model check**: `@model.name` + `@model.provider`\n\n## Fix Paths\n- Prompt optimization: Reduce token count\n- Parallelize agents: Run Visionizer/TTS concurrently\n- Cache repeated prompts/images\n\n@infra-oncall @genai-platform\n#storytopia #latency #llm\n{{/is_alert}}\n\n{{#is_warning}}\n⚠️ **LLM latency warning** - Avg {{value}}s (approaching 18s)\n{{/is_warning}}\n\n{{#is_recovery}}\n✅ **LLM latency recovered** - Back to {{value}}s ({{recovery_time}})\n{{/is_recovery}}",
+	"tags": [
+		"span_kind:llm"
+	],
+	"options": {
+		"thresholds": {
+			"critical": 18,
+			"warning": 15
+		},
+		"notify_audit": false,
+		"threshold_windows": null,
+		"on_missing_data": "default",
+		"include_tags": false,
+		"new_host_delay": 300
+	},
+	"priority": 3,
+	"draft_status": "published"
+}

@@ -1,0 +1,22 @@
+{
+	"id": 17320147,
+	"name": "Issue with story agent voice narration!",
+	"type": "llm-observability alert",
+	"query": "llm-observability(\"@event_type:span @ml_app:storytopia-backend\").rollup(\"avg\", \"@evaluations.custom.tts_status\").last(\"5m\") < 0.5",
+	"message": "🚨 **Agent Issue with Story Voice Narration!**\n\n{{#is_alert}}\n**TTS Agent failing** - stories not narrating\n\n**Signal**: {{value}}% failure rate (threshold: >5%)\n**Timeframe**: Last {{recovery_time}} - ongoing\n\n## Immediate Actions\n1. **Check TTS queue**: Cloud Run logs [storytopia-instrumented]\n2. **Verify quota**: Vertex AI console → TTS usage\n3. **Restart agent**: `gcloud run deploy storytopia-tts --image=gcr.io/...`\n\n## Troubleshooting\n- **Trace ID**: {{trace_id.value}} [View Trace]({{trace_search}})\n- **Last success**: {{last_success.value}}\n- **Failing traces**: `@evaluation.tts.assessment:fail`\n\n@tts-oncall @storytopia\n\n#storytopia #tts-failure #agent-issue\n{{/is_alert}}\n\n{{#is_recovery}}\n✅ **TTS Agent recovered!**\n- Success rate: **{{value}}%**\n- Recovery time: **{{recovery_time}}**\nMonitoring resumed\n{{/is_recovery}}",
+	"tags": [],
+	"options": {
+		"thresholds": {
+			"critical": 0.5,
+			"warning": 0.7
+		},
+		"enable_logs_sample": false,
+		"notify_audit": false,
+		"on_missing_data": "default",
+		"include_tags": false,
+		"new_host_delay": 300,
+		"groupby_simple_monitor": false
+	},
+	"priority": 2,
+	"draft_status": "published"
+}

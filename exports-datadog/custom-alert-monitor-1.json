@@ -1,0 +1,22 @@
+{
+	"id": 17317466,
+	"name": "Inappropriate content detection rate for kids' drawings has spiked!",
+	"type": "llm-observability alert",
+	"query": "llm-observability(\"@event_type:span @ml_app:storytopia-backend\").rollup(\"avg\", \"@evaluations.custom.inappropriate_content_flag\").last(\"5m\") >= 0.6",
+	"message": "🚨 **Visionizer Safety Alert - Inappropriate Content Detected!**\n\n{{#is_alert}}\n## Condition\n**Avg inappropriate_content_flag**: {{value}} (Threshold: >0.6)\n**Visionizer Agent** generating unsafe/misclassified drawings\n**Last 15m** across storytopia-backend spans\n\n## Why it matters\nFlagged content risks user safety → story generation halts → kids miss creative experience\n\n## Possible causes\n- **False positives**: Overly sensitive safety eval misclassifying safe kids' drawings\n- **User abuse**: Harmful prompt injection trying to bypass safety\n- **Prompt regression**: Recent changes weakened guardrails\n\n## Immediate Actions\n1. **Inspect samples**: Review 5-10 recent flagged drawings (screenshots) - false positive or real threat?\n2. **Check failing traces**: {{trace_search}}@evaluation.inappropriate_content_flag.assessment:fail\n3. **Scan for injection**: Look for unusual user prompts or patterns\n\n## Fix Paths\n- **False positives**: Tune safety parameters for required themes \n- **User abuse**: Strengthen input sanitization + rate limiting\n- **Prompt regression**: Rollback Visionizer changes\n\n@visionizer-oncall @safety-team\n#storytopia #safety #visionizer\n{{/is_alert}}\n\n{{#is_warning}}\n⚠️ **Visionizer safety warning** - Avg flag {{value}} (approaching 0.6)\n{{/is_warning}}\n\n{{#is_recovery}}\n✅ **Safety guardrails restored** - Flag score {{value}} < 0.6 ({{recovery_time}})\n{{/is_recovery}}",
+	"tags": [],
+	"options": {
+		"thresholds": {
+			"critical": 0.6,
+			"warning": 0.5
+		},
+		"enable_logs_sample": false,
+		"notify_audit": false,
+		"on_missing_data": "default",
+		"include_tags": false,
+		"new_host_delay": 300,
+		"groupby_simple_monitor": false
+	},
+	"priority": 1,
+	"draft_status": "published"
+}
