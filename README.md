@@ -68,6 +68,8 @@ By correlating these 5 unique signals – **Creative Intent, Inappropriate Conte
 
 We built **7 custom Datadog alert monitors** directly on top of Storytopia’s LLM evaluation signals to detect degradations in AI agent behavior in near real time. Each monitor encodes a clear behavioral expectation for our agents and pairs detection with concrete response guidance.
 
+![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
+
 **Criteria for Each of Our Detection Rules**
 
 | Monitor Name | Detection Criteria | Purpose / Impact |
@@ -81,10 +83,6 @@ We built **7 custom Datadog alert monitors** directly on top of Storytopia’s L
 | **LLM Response Latency Spike** | Avg LLM span duration > **18s** | Catches performance regressions that degrade the real-time storytelling experience |
 
 This allows us to respond to any issues quickly and precisely, turning observability insights into concrete fixes & improvements.
-
-
-![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
-
 ------
 ## Try Storytopia Live
 
