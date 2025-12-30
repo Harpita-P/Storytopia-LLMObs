@@ -1,8 +1,73 @@
-![Storytopia Main Screen](https://github.com/Harpita-P/Storytopia/blob/ce180f06d415c798aa699b3cbab49e8c1f12910e/Storytopia-Main.png?raw=true)
+![Storytopia LLObs Main Screen](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/0a7d8106ebe6ea066d3419987b15910c8272753e/Storytopia%20LLMobs%20Main.png)
 
-**Storytopia** transforms a child’s drawing into a narrated, illustrated 8-scene quest (story adventure), augmenting imagination with Generative AI. Built for the **Google Cloud Run Hackathon**, Storytopia demonstrates how **multi-agent orchestration with Google ADK**, **Vertex AI**, and **Cloud Run** can turn screen time into a hands-on creative adventure.
+We built a **Datadog-powered observability layer** into our app **Storytopia** using **Datadog’s LLM Observability SDK** to capture rich telemetry on our AI agents. We created a custom Datadog dashboard with multiple widgets to monitor LLM operational insights.  
+
+What makes our approach unique is that we go beyond standard LLM telemetry – such as cost, latency, errors, and request traces – to also stream **custom AI Agent Evaluation telemetry** that reflects how our multi-agent system behaves in production. We stream 5 custom evaluation signals to Datadog to measure **agent quality, safety indicators, and creative consistency** across different user drawings and story inputs.  On top of these signals, we configured custom Datadog alert monitors that trigger when evaluation metrics degrade, with **actionable case context** to quickly investigate and respond to issues.
 
 ---
+## Running Storytopia with Datadog LLM Observability
+
+To run the Storytopia backend locally with Datadog LLM Observability enabled, set the Datadog environment variables and start the app under the Datadog tracer wrapper:
+
+```bash
+export DD_API_KEY=<your_datadog_api_key>
+export DD_SITE=us5.datadoghq.com
+export DD_LLMOBS_ENABLED=1
+export DD_LLMOBS_ML_APP=storytopia-backend
+export DD_SERVICE=storytopia-backend
+export DD_ENV=dev
+export DD_VERSION=0.1.0
+
+cd agents_service
+ddtrace-run python main.py
+```
+----
+## Traffic Generator: Usage and Expected Datadog Signals
+
+To trigger LLMObs metrics and alerts (including inappropriate content flags), run our traffic generator against a running backend:
+
+```bash
+cd agents_service/traffic_generator
+STORYTOPIA_BACKEND_URL=http://localhost:8000 python generate_traffic.py --iterations 5 --sleep 5
+```
+We have placed a few sample drawings into the `agents_service/traffic_generator/images` directory to simulate user inputs - Take a look at them. Some of these drawings include prompt injection attempts of harmful content that will trigger the Datadog alert monitor. As the generator calls `generate-character`, `create-quest`, and `text-to-speech`, you should see an alert for a spike in innapropriate content, and evaluations for creative intent, lesson alignment, illustrator consistency appear in the Datadog LLM Observability dashboard.
+
+-----
+
+## Instrumentation and Tracing
+We instrumented the Storytopia backend using Datadog’s LLM Observability SDK alongside Datadog’s Python tracing library (ddtrace) to establish end-to-end visibility across our FastAPI service. Every user request is traced as it flows through API handling, multi-agent orchestration, LLM calls, and tool executions, providing a complete view of application behavior. 
+
+![Storytopia LLM Metrics Dashboard](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/cb6863aeedef2a33afd82ca051eb9c1abe33d7ec/Dashboard-LLM-Metrics.gif)
+
+We were able to capture & stream to our dashboard:
+- LLM request latency, token counts, and error rates  
+- LLM call timing and cost signals (Computing average cost per story created)
+- End-to-end traces spanning our 3 AI agents (Visionizer, Quest Creator and Illustrator agents) with insights on prompt inputs, outputs, failure cases, etc. 
+
+## Our Strategy: 5 Custom LLM Evaluation Signals for Smarter Agent Monitoring
+
+As an innovative component, we designed 5 **custom, externally computed LLM evaluation signals** that capture how our AI agents perform beyond traditional system metrics. These evaluations are computed by invoking an external evaluation system (AgentOps), which analyzes our agent outputs and returns structured scores with human-readable explanations. These evaluations are attached to active trace spans using Datadog’s LLM Observability SDK and streamed as **first-class telemetry** into Datadog.
+
+Each evaluation is defined by:
+- A clear label describing what is being measured  
+- A normalized metric value (typically a score between 0 and 1, or a binary 0/1 flag)  
+- A pass/fail assessment derived from configurable thresholds  
+- Contextual metadata tying the evaluation back to a specific agent, task, and user interaction  
+
+![Rationale for Custom Evaluation Metrics](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/0aceb4dafcbfcaec1cee9d7559ef2dd366c9ac83/Rationale-Custom-EvalMetrics.png)
+
+By correlating these 5 unique signals – **Creative Intent, Inappropriate Content, Lesson Alignment, Visual Consistency, and Story Narration Status** – with request traces, we can monitor silent quality and safety failures, understand where specific agents struggle in our Multi-Agent pipeline.
+
+## Custom Alert Monitors with Actionable Context
+
+We built 5 Datadog monitors directly on top of our custom evaluation signals to detect degradations in AI agent behavior in near real time. Each monitor includes actionable context, such as:
+- Clear descriptions of what signal degraded and why it matters  
+- Suggested next steps for team members (e.g. reviewing LLM prompts, inspecting recent inputs, testing for false positives in cases of flagged inappropriate content) 
+
+This allows us to respond to any issues quickly and precisely, turning observability insights into concrete fixes & improvements.
+![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
+
+------
 ## Try Storytopia Live
 
 You can access the hosted version of **Storytopia** here:  
@@ -17,98 +82,3 @@ You can access the hosted version of **Storytopia** here:
   _(Actual times may vary depending on model loads and network conditions.)_  
 - Demo video and GIF examples are **sped up for presentation purposes**.
 ---
-
-## High-Level System Overview
-
-Storytopia consists of two main components:
-
-- **Next.js Frontend (UI Service):** Built for the browser, our interface lets children draw directly on a digital canvas — whether on an iPad or a computer. They can also upload photos of their favorite toys, stuffed animals, or hand-drawn art to turn them into story characters.
-- **FastAPI Multi-Agent Backend (Agents Service):** Powered by the **Google Agent Development Kit (ADK)**, the backend orchestrates three AI agents — **Visionizer**, **Quest Creator**, and **Illustrator** — to generate characters, stories, and illustrations.  
-
-An optional **Text-to-Speech** endpoint provides narrated playback using **Cloud TTS**.
-
----
-
-## Cloud Deployment Surfaces
-
-| Component | Technology | Deployment | Purpose |
-|------------|-------------|-------------|----------|
-| **Frontend** | Next.js | Cloud Run | Drawing canvas, story flow UI |
-| **Backend** | FastAPI + ADK | Cloud Run | Orchestrates AI agents |
-| **Media** | Cloud Storage | – | Stores all uploads & generated assets |
-| **AI Services** | Vertex AI (Gemini + Imagen) & Cloud TTS| – | Drawing analysis, story generation, image synthesis, narrations |
-
-The frontend and backend are containerized with  dedicated **Dockerfiles** and deployable as two separate **Cloud Run services**. Runtime dependencies include **Google Cloud Storage**, **Vertex AI (Gemini Flash + Imagen)**, and **Cloud TTS**.
-
-<p align="center">
-  <img src="https://github.com/Harpita-P/Storytopia/blob/62ab0873f9d73c0556d57b9b385798c24c5e06f7/Storytopia-Architecture.png?raw=true" alt="Storytopia Architecture" width="850">
-</p>
-<p align="center"><strong>Figure 1.</strong> Multi-Agent Architecture on Google Cloud Run</p>
-
-## How Our Multi-Agent Workflow Works
-
-Transforming a child’s character and lesson into a fully illustrated, interactive picture book is a complex process that benefits from being divided into specialized components — which is exactly where AI agents come to play. 
-Storytopia is a conversation between multiple AI agents (Google ADK) that collaborate with eachother. Below, we walk through each step of the process. 
-
-### Google ADK Integration
-- Each AI agent is defined as an **LlmAgent** within the Google **Agent Development Kit (ADK)**.  
-- The FastAPI backend manages interactions through **ADK sessions**, executed asynchronously using `Runner.run_async`.  
-- Structured JSON responses stream back to the frontend in real time.
-
-### 1. Creating Your Character with the Visionizer Agent
-We designed this stage to make kids feel like their hand-drawn art has come to life, while maintaining visual consistency and safety through automated filtering.
-When a child finishes their drawing and hits “Generate Character,” we start the process with our **Visionizer Agent**.
-
-1. The frontend sends the base64-encoded drawing and a user ID to the '/generate-character` endpoint. 
-2. Our FastAPI backend uploads the image to **Google Cloud Storage** and initializes an **ADK Runner session**.  
-3. The **Visionizer Agent** takes over:
-   - It first calls **Gemini Flash 2.0 (Vision Capability)** to understand the drawing — identifying the character’s key traits, objects, and any safety signals.  
-   - Given that the drawing is appropriate, it builds a detailed prompt for **Imagen 3.0**, which then produces a high-quality, animated version of the character.
-4. The agent returns structured JSON including:
-   - Extracted visual traits  
-   - The Imagen prompt  
-   - A Cloud Storage URI pointing to the generated image  
----
-![Creating Character Demo](https://github.com/Harpita-P/Storytopia/blob/a6c44a907685f84477cfdbffa6f7adefcbb3a7c8/CreatingCharacterExample.gif?raw=true)
-
-
-### 2. Turning the Character into a Quest with the Quest Creator Agent
-
-We treat this agent as the “writer” of the experience — blending educational goals with fun, appropriate storytelling.
-Once the character is ready, the child / a parent selects a lesson theme – for example, *kindness*, *online safety*, or *learning to ride a bike*.  
-
-
-![Lesson Theme Selection Demo](https://github.com/Harpita-P/Storytopia/blob/17fef7ab21915f9e1713d21f08aad40ab70b20e9/LessonTheme.gif?raw=true)
-
-This triggers the **Quest Creator Agent**.
-
-Here’s how it works:
-
-1. The frontend sends the character’s metadata (from the Visionizer Agent stage) and the chosen lesson to `/create-quest`.  
-2. The **Quest Creator Agent**, powered by **Gemini 2.0 Flash (LLM)**, generates an **eight-scene interactive story**, where each scene includes:
-   - A short story segment and question
-   - One correct and one incorrect answer  
-   - A corresponding image prompt  
----
-
-### 3. Bringing the Story to Life with the Illustrator Agent
-
-Once the story structure is ready, we move to the visual storytelling phase with the **Illustrator Agent**. Here’s the process:
-
-1. The quest JSON from the previous step is passed to the **Illustrator Agent**. We also fetch the generated character image from Cloud Storage, and pass it to the agent. **We found that this step was really important for maintaining visual consistency** - ensuring that the kid's character appears the same in each scene. 
-2. The agent enhances the image prompts for **visual consistency** across all scenes — matching colors, character poses, and setting details.  
-3. It then calls **Gemini Flash 2.5 Image** and performs Image&text-to-Image processing, to create eye-catching **illustrations** for each scene. 
-4. Each generated image is uploaded to **Google Cloud Storage**, and the URIs are consolidated into the final JSON response.
-5. The full questbook is asssembled, generated and rendered in the frontend UI.
----
-![Storytopia Quest Demo](https://github.com/Harpita-P/Storytopia/blob/46619dd63b3024bd942b34ec01b6bd9783990b7f/Storytopia-Quest.gif?raw=true)
-
-### 4. Adding Narration with Gemini Text-to-Speech (Optional)
-
-To make stories even more immersive and accessible to all readers, we offer optional **narrated playback** using **Cloud TTS**. When a narration request is made (by clicking on the sound icon):
-
-1. The frontend sends story text to `/text-to-speech`.  
-2. The backend invokes **Gemini TTS**, generating expressive, child-friendly MP3 narration.  
-3. The audio file is stored in **Cloud Storage**, and the returned URI allows the frontend to sync playback scene by scene.
----
-
