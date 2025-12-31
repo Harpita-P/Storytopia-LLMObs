@@ -362,7 +362,7 @@ export default function Home() {
                       <textarea
                         value={customLesson}
                         onChange={(e) => setCustomLesson(e.target.value)}
-                        placeholder="e.g., Learning to be brave when trying new things"
+                        placeholder="e.g., Learning to be brave when trying something new"
                         className="flex-1 px-6 py-4 border-4 border-orange-300 rounded-2xl text-2xl font-medium focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-200 resize-none"
                         rows={3}
                         maxLength={200}

@@ -1,1 +1,1 @@
-[{"origin": ["*"], "method": ["GET", "POST"], "maxAgeSeconds": 3600}]
+[{"origin": ["*"], "method": ["GET", "POST"], "maxAgeSeconds": 3500}]
