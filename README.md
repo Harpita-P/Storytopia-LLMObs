@@ -52,7 +52,7 @@ We were able to capture & stream to our dashboard:
 
 ## Our Strategy: 5 Custom LLM Evaluation Signals for Smarter Agent Monitoring
 
-As an innovative component, we designed 5 **custom, externally computed LLM evaluation signals** that capture how our AI agents perform beyond traditional system metrics. These evaluations are computed by invoking an external evaluation system (AgentOps), which analyzes our agent outputs and returns structured scores with human-readable explanations. These evaluations are attached to active trace spans using Datadog’s LLM Observability SDK and streamed as **first-class telemetry** into Datadog.
+As an innovative component, we designed 5 **custom, externally computed LLM evaluation signals** that capture how our AI agents perform beyond traditional system metrics. These signals are: **Creative Intent, Inappropriate Content, Lesson Alignment, Visual Consistency, and Story Narration Status**. These evaluations are computed by invoking an external evaluation system (AgentOps), which analyzes our agent outputs and returns structured scores with human-readable explanations. These evaluations are attached to active trace spans using Datadog’s LLM Observability SDK and streamed as **first-class telemetry** into Datadog.
 
 Each evaluation is defined by:
 - A clear label describing what is being measured  
