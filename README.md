@@ -83,7 +83,7 @@ We built **7 custom Datadog alert monitors** directly on top of Storytopia’s L
 This allows us to respond to any issues quickly and precisely, turning observability insights into concrete fixes & improvements.
 
 
-![Alert Monitors in Datadog](https://raw.githubusercontent.com/Harpita-P/Storytopia-LLMObs/37805b9701d95cfe44f11843a752d96c3980452b/AlertMonitors.gif)
+![Alert Monitors in Datadog](https://github.com/Harpita-P/Storytopia-LLMObs/blob/07ed7662dccd878937bc9aab1476540d76e92c88/UpdatedMonitor.gif)
 
 ------
 ## Try Storytopia Live
